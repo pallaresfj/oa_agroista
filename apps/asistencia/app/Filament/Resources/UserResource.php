@@ -8,7 +8,7 @@ use App\Filament\Resources\UserResource\RelationManagers\SchedulesRelationManage
 use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Select;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -74,11 +74,24 @@ class UserResource extends Resource
                             ->maxLength(20)
                             ->columnSpan(1),
 
-                        Select::make('role')
+                        CheckboxList::make('roles')
                             ->label('Rol')
-                            ->options(UserRole::options())
+                            ->relationship(
+                                'roles',
+                                'name',
+                                modifyQueryUsing: fn ($query) => $query->whereIn('name', [
+                                    User::ROLE_SOPORTE,
+                                    User::ROLE_DIRECTIVO,
+                                    User::ROLE_DOCENTE,
+                                ])
+                            )
+                            ->getOptionLabelFromRecordUsing(
+                                fn ($record) => UserRole::tryFrom((string) $record->name)?->label() ?? (string) $record->name
+                            )
+                            ->columns(3)
                             ->required()
-                            ->native(false)
+                            ->minItems(1)
+                            ->maxItems(1)
                             ->columnSpan(1),
 
                         Toggle::make('is_active')
@@ -110,11 +123,15 @@ class UserResource extends Resource
                     ->searchable()
                     ->toggleable(),
 
-                TextColumn::make('role')
+                TextColumn::make('role_label')
                     ->label('ROL')
                     ->badge()
-                    ->formatStateUsing(fn($state) => $state?->label())
-                    ->color(fn($state) => $state?->color()),
+                    ->color(fn (User $record) => match (true) {
+                        $record->isSoporte() => UserRole::SOPORTE->color(),
+                        $record->isDirectivo() => UserRole::DIRECTIVO->color(),
+                        $record->isDocente() => UserRole::DOCENTE->color(),
+                        default => 'gray',
+                    }),
 
                 IconColumn::make('is_active')
                     ->label('ACTIVO')
@@ -129,6 +146,15 @@ class UserResource extends Resource
                 SelectFilter::make('role')
                     ->label('Rol')
                     ->options(UserRole::options())
+                    ->query(function ($query, array $data) {
+                        $role = $data['value'] ?? null;
+
+                        if (! $role) {
+                            return $query;
+                        }
+
+                        return $query->whereHas('roles', fn ($shieldQuery) => $shieldQuery->where('name', $role));
+                    })
                     ->native(false),
 
                 TernaryFilter::make('is_active')

@@ -6,15 +6,28 @@ use App\Enums\UserRole;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Schema;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
+
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+
+    public const ROLE_SOPORTE = 'soporte';
+
+    public const ROLE_DIRECTIVO = 'directivo';
+
+    public const ROLE_DOCENTE = 'docente';
+
+    protected string $guard_name = 'web';
 
     /**
      * The attributes that are mass assignable.
@@ -27,7 +40,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'auth_subject',
         'institution_code',
         'password',
-        'role',
         'phone',
         'identification_number',
         'is_active',
@@ -56,7 +68,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
             'is_active' => 'boolean',
             'last_sso_login_at' => 'datetime',
         ];
@@ -83,7 +94,19 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->role?->canAccessAdmin() && $this->is_active;
+        if (! $this->is_active) {
+            return false;
+        }
+
+        if ($this->hasRole(self::ROLE_SUPER_ADMIN)) {
+            return true;
+        }
+
+        if ($this->can('panel_user')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -91,7 +114,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isSoporte(): bool
     {
-        return $this->role === UserRole::SOPORTE;
+        return $this->hasAnyRole([self::ROLE_SUPER_ADMIN, self::ROLE_SOPORTE]);
     }
 
     /**
@@ -99,7 +122,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isDirectivo(): bool
     {
-        return $this->role === UserRole::DIRECTIVO;
+        return $this->hasAnyRole([self::ROLE_SUPER_ADMIN, self::ROLE_DIRECTIVO]);
     }
 
     /**
@@ -107,7 +130,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function isDocente(): bool
     {
-        return $this->role === UserRole::DOCENTE;
+        return $this->hasRole(self::ROLE_DOCENTE);
     }
 
     /**
@@ -121,17 +144,17 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     /**
      * Scope a query to only include users with a specific role.
      */
-    public function scopeWithRole($query, UserRole $role)
+    public function scopeWithRole(Builder $query, UserRole $role): Builder
     {
-        return $query->where('role', $role->value);
+        return $query->whereHas('roles', fn (Builder $relatedQuery) => $relatedQuery->where('name', $role->value));
     }
 
     /**
      * Scope a query to only include docentes.
      */
-    public function scopeDocentes($query)
+    public function scopeDocentes(Builder $query): Builder
     {
-        return $query->where('role', UserRole::DOCENTE->value);
+        return $query->withRole(UserRole::DOCENTE);
     }
 
     /**
@@ -139,7 +162,46 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function getRoleLabelAttribute(): string
     {
-        return $this->role?->label() ?? 'Sin rol';
+        if ($this->isSoporte()) {
+            return UserRole::SOPORTE->label();
+        }
+
+        if ($this->isDirectivo()) {
+            return UserRole::DIRECTIVO->label();
+        }
+
+        if ($this->isDocente()) {
+            return UserRole::DOCENTE->label();
+        }
+
+        return 'Sin rol';
+    }
+
+    public function dashboardRouteName(): string
+    {
+        if ($this->isDirectivo()) {
+            return 'directivo.dashboard';
+        }
+
+        if ($this->isDocente()) {
+            return 'docente.dashboard';
+        }
+
+        return 'dashboard';
+    }
+
+    public function ensureApplicationRole(string $preferredRole = self::ROLE_DOCENTE): void
+    {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('model_has_roles') || $this->roles()->exists()) {
+            return;
+        }
+
+        $normalizedRole = mb_strtolower(trim($preferredRole));
+        $roleName = in_array($normalizedRole, [self::ROLE_SOPORTE, self::ROLE_DIRECTIVO, self::ROLE_DOCENTE], true)
+            ? $normalizedRole
+            : self::ROLE_DOCENTE;
+
+        $this->assignRole($roleName);
     }
 
     public function getFilamentAvatarUrl(): ?string

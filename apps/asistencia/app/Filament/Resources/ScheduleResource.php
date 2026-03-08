@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\ScheduleResource\Pages;
 use App\Models\Campus;
 use App\Models\Schedule;
@@ -54,8 +55,12 @@ class ScheduleResource extends Resource
                         Select::make('user_id')
                             ->label('Docente')
                             ->options(
-                                User::where('is_active', true)
-                                    ->whereIn('role', ['docente', 'directivo'])
+                                User::query()
+                                    ->where('is_active', true)
+                                    ->where(function ($query) {
+                                        $query->withRole(UserRole::DOCENTE)
+                                            ->orWhere(fn ($innerQuery) => $innerQuery->withRole(UserRole::DIRECTIVO));
+                                    })
                                     ->pluck('name', 'id')
                             )
                             ->required()
@@ -147,7 +152,11 @@ class ScheduleResource extends Resource
                 SelectFilter::make('user_id')
                     ->label('Docente')
                     ->options(
-                        User::whereIn('role', ['docente', 'directivo'])
+                        User::query()
+                            ->where(function ($query) {
+                                $query->withRole(UserRole::DOCENTE)
+                                    ->orWhere(fn ($innerQuery) => $innerQuery->withRole(UserRole::DIRECTIVO));
+                            })
                             ->pluck('name', 'id')
                     )
                     ->searchable()

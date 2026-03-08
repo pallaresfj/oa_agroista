@@ -537,7 +537,7 @@
                                                     {{ auth()->user()->name }}
                                                 </p>
                                                 <p class="text-xs text-gray-500 mt-1 capitalize">
-                                                    {{ auth()->user()->role->label() }}
+                                                    {{ auth()->user()->role_label }}
                                                 </p>
                                             </div>
                                             <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden border border-gray-300">
@@ -596,7 +596,7 @@
 
                     @foreach($navItems as $item)
                         <li>
-                            <a href="{{ $item['route'] == '#' ? '#' : ($item['route'] == 'dashboard' && auth()->check() ? route(auth()->user()->role->value . '.dashboard') : '#') }}"
+                            <a href="{{ $item['route'] == '#' ? '#' : ($item['route'] == 'dashboard' && auth()->check() ? route(auth()->user()->dashboardRouteName()) : '#') }}"
                                 class="sidebar-link group {{ $item['active'] ? 'active' : '' }}">
                                 <div class="flex items-center justify-center w-6 h-6 flex-shrink-0">
                                     <svg class="w-5 h-5 transition duration-75" fill="none" stroke="currentColor"

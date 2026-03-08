@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\UserRole;
 use App\Models\Attendance;
 use App\Models\Campus;
 use App\Models\User;
@@ -20,12 +21,20 @@ class SoporteStatsWidget extends BaseWidget
 
     protected function getStats(): array
     {
-        $activeUsers = User::where('is_active', true)
-            ->whereIn('role', ['docente', 'directivo'])
+        $activeUsers = User::query()
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->withRole(UserRole::DOCENTE)
+                    ->orWhere(fn ($innerQuery) => $innerQuery->withRole(UserRole::DIRECTIVO));
+            })
             ->count();
 
-        $inactiveUsers = User::where('is_active', false)
-            ->whereIn('role', ['docente', 'directivo'])
+        $inactiveUsers = User::query()
+            ->where('is_active', false)
+            ->where(function ($query) {
+                $query->withRole(UserRole::DOCENTE)
+                    ->orWhere(fn ($innerQuery) => $innerQuery->withRole(UserRole::DIRECTIVO));
+            })
             ->count();
 
         $activeCampus = Campus::where('is_active', true)->count();

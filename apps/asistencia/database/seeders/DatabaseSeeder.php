@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,14 +16,38 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'name' => 'Administrador',
-            'email' => 'pallaresfj@asyservicios.com',
-            'email_verified_at' => now(),
-            'password' => Hash::make('pass1234'),
-            'role' => UserRole::SOPORTE,
-            'is_active' => true,
+        $this->call([
+            RoleSeeder::class,
+            PanelAccessSeeder::class,
+            RolePermissionSeeder::class,
         ]);
+
+        $users = [
+            [
+                'name' => 'Soporte',
+                'email' => 'pallaresfj@iedagropivijay.edu.co',
+                'role' => User::ROLE_SOPORTE,
+            ],
+            [
+                'name' => 'Directivo',
+                'email' => 'rectoria@iedagropivijay.edu.co',
+                'role' => User::ROLE_DIRECTIVO,
+            ],
+        ];
+
+        foreach ($users as $seedUser) {
+            $user = User::query()->updateOrCreate(
+                ['email' => $seedUser['email']],
+                [
+                    'name' => $seedUser['name'],
+                    'email_verified_at' => now(),
+                    'password' => Hash::make('pass1234'),
+                    'is_active' => true,
+                ],
+            );
+
+            $user->syncRoles([$seedUser['role']]);
+        }
 
         $this->call([
             SettingsSeeder::class,

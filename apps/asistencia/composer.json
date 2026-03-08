@@ -6,8 +6,9 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "agroista/core": "*",
         "php": "^8.2",
+        "agroista/core": "*",
+        "bezhansalleh/filament-shield": "^4.1",
         "filament/filament": "^5.0",
         "firebase/php-jwt": "^6.10",
         "laravel-lang/common": "^6.7",

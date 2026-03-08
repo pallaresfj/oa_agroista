@@ -1,13 +1,19 @@
 <?php
 
 use App\Models\User;
-use App\Services\Sso\OidcClient;
+use Agroista\Core\Sso\OidcClient;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     config()->set('sso.session_check_enabled', true);
+    $this->seed(RoleSeeder::class);
+    $this->seed(PanelAccessSeeder::class);
+    $this->seed(RolePermissionSeeder::class);
 });
 
 afterEach(function (): void {
@@ -76,9 +82,8 @@ it('rejects login when local user is inactive', function () {
         'name' => 'Docente',
         'email' => 'inactivo@iedagropivijay.edu.co',
         'password' => bcrypt('secret'),
-        'role' => 'docente',
         'is_active' => false,
-    ]);
+    ])->assignRole('docente');
 
     $mock = Mockery::mock(OidcClient::class);
     $this->app->instance(OidcClient::class, $mock);
@@ -122,9 +127,9 @@ it('rejects login when local user is inactive', function () {
 it('middleware redirects authenticated panel requests to session check', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
         'is_active' => true,
     ]);
+    $user->assignRole('docente');
 
     $response = $this
         ->actingAs($user, 'web')
@@ -139,9 +144,9 @@ it('middleware redirects authenticated panel requests to session check', functio
 it('stores safe return_to from query when starting silent session check', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
         'is_active' => true,
     ]);
+    $user->assignRole('docente');
 
     $mock = Mockery::mock(OidcClient::class);
     $this->app->instance(OidcClient::class, $mock);
@@ -161,9 +166,9 @@ it('stores safe return_to from query when starting silent session check', functi
 it('ignores unsafe return_to from query when starting silent session check', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
         'is_active' => true,
     ]);
+    $user->assignRole('docente');
 
     $existingReturnTo = 'http://localhost/app';
 
@@ -186,9 +191,9 @@ it('ignores unsafe return_to from query when starting silent session check', fun
 it('logs out local session when silent session check returns login_required', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
         'is_active' => true,
     ]);
+    $user->assignRole('docente');
 
     $response = $this
         ->actingAs($user, 'web')
@@ -206,9 +211,9 @@ it('logs out local session when silent session check returns login_required', fu
 it('logs out local session when silent session check returns unexpected error', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
         'is_active' => true,
     ]);
+    $user->assignRole('docente');
 
     $response = $this
         ->actingAs($user, 'web')

@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\UserRole;
 use App\Models\Attendance;
 use App\Models\User;
 
@@ -13,7 +12,7 @@ class AttendancePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role?->canViewAllAttendances() || $user->role === UserRole::DOCENTE;
+        return $user->is_active && ($user->isSoporte() || $user->isDirectivo() || $user->isDocente());
     }
 
     /**
@@ -22,7 +21,7 @@ class AttendancePolicy
     public function view(User $user, Attendance $attendance): bool
     {
         // Soporte and directivo can view all
-        if ($user->role?->canViewAllAttendances()) {
+        if ($user->isSoporte() || $user->isDirectivo()) {
             return true;
         }
 
@@ -36,10 +35,7 @@ class AttendancePolicy
     public function create(User $user): bool
     {
         // Only active docentes and directivos can register attendance
-        return $user->is_active && in_array($user->role, [
-            UserRole::DOCENTE,
-            UserRole::DIRECTIVO,
-        ]);
+        return $user->is_active && ($user->isDocente() || $user->isDirectivo());
     }
 
     /**
@@ -48,7 +44,7 @@ class AttendancePolicy
     public function update(User $user, Attendance $attendance): bool
     {
         // Soporte and directivos can update attendances
-        return in_array($user->role, [UserRole::SOPORTE, UserRole::DIRECTIVO]);
+        return $user->isSoporte() || $user->isDirectivo();
     }
 
     /**
@@ -57,7 +53,7 @@ class AttendancePolicy
     public function delete(User $user, Attendance $attendance): bool
     {
         // Only soporte can delete attendances
-        return $user->role === UserRole::SOPORTE;
+        return $user->isSoporte();
     }
 
     /**
@@ -65,7 +61,7 @@ class AttendancePolicy
      */
     public function restore(User $user, Attendance $attendance): bool
     {
-        return $user->role === UserRole::SOPORTE;
+        return $user->isSoporte();
     }
 
     /**
@@ -73,7 +69,7 @@ class AttendancePolicy
      */
     public function forceDelete(User $user, Attendance $attendance): bool
     {
-        return $user->role === UserRole::SOPORTE;
+        return $user->isSoporte();
     }
 
     /**
@@ -81,6 +77,6 @@ class AttendancePolicy
      */
     public function export(User $user): bool
     {
-        return $user->role?->canViewAllAttendances();
+        return $user->isSoporte() || $user->isDirectivo();
     }
 }

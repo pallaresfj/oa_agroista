@@ -149,6 +149,9 @@ class SsoController extends Controller
             ], static fn (mixed $value): bool => $value !== null),
         );
 
+        $preferredRole = mb_strtolower(trim((string) ($claims['role'] ?? User::ROLE_DOCENTE)));
+        $user->ensureApplicationRole($preferredRole);
+
         if (! $user->is_active) {
             return $this->fail('Tu cuenta local está inactiva.');
         }

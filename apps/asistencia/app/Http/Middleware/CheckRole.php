@@ -28,10 +28,18 @@ class CheckRole
             abort(403, 'Usuario inactivo.');
         }
 
-        // Check if user has one of the allowed roles
-        $userRole = $request->user()->role?->value;
+        $allowedRoles = collect($roles)
+            ->flatMap(fn (string $role) => explode(',', $role))
+            ->map(fn (string $role) => trim($role))
+            ->filter()
+            ->values()
+            ->all();
 
-        if (!in_array($userRole, $roles)) {
+        if ($allowedRoles === []) {
+            return $next($request);
+        }
+
+        if (! $request->user()->hasAnyRole($allowedRoles)) {
             abort(403, 'No tienes permiso para acceder a esta sección.');
         }
 

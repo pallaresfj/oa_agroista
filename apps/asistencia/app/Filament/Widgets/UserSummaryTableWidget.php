@@ -86,7 +86,8 @@ class UserSummaryTableWidget extends BaseWidget
         $startDate = now()->startOfMonth();
         $endDate = now()->endOfMonth();
 
-        return User::where('role', UserRole::DOCENTE)
+        return User::query()
+            ->withRole(UserRole::DOCENTE)
             ->where('is_active', true)
             ->withCount([
                 'attendances' => function ($query) use ($startDate, $endDate) {
