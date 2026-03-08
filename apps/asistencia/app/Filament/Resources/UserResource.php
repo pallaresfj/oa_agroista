@@ -8,7 +8,7 @@ use App\Filament\Resources\UserResource\RelationManagers\SchedulesRelationManage
 use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -74,7 +74,7 @@ class UserResource extends Resource
                             ->maxLength(20)
                             ->columnSpan(1),
 
-                        CheckboxList::make('roles')
+                        Select::make('roles')
                             ->label('Rol')
                             ->relationship(
                                 'roles',
@@ -88,10 +88,10 @@ class UserResource extends Resource
                             ->getOptionLabelFromRecordUsing(
                                 fn ($record) => UserRole::tryFrom((string) $record->name)?->label() ?? (string) $record->name
                             )
-                            ->columns(3)
                             ->required()
-                            ->minItems(1)
-                            ->maxItems(1)
+                            ->searchable()
+                            ->preload()
+                            ->native(false)
                             ->columnSpan(1),
 
                         Toggle::make('is_active')
