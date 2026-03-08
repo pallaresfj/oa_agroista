@@ -16,12 +16,18 @@ class OAuthClientsSeeder extends Seeder
         $definitions = [
             [
                 'name' => 'planes',
-                'redirect_uris' => ['https://oa-planes.test/sso/callback'],
+                'redirect_uris' => [
+                    'https://oa-planes.test/sso/callback',
+                    'https://oa-planes.test/sso/session-check/callback',
+                ],
                 'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
             ],
             [
                 'name' => 'asistencia',
-                'redirect_uris' => ['https://oa-asistencia.test/sso/callback'],
+                'redirect_uris' => [
+                    'https://oa-asistencia.test/sso/callback',
+                    'https://oa-asistencia.test/sso/session-check/callback',
+                ],
                 'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
             ],
             [

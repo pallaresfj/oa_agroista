@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
 class SsoController extends Controller
@@ -143,10 +145,7 @@ class SsoController extends Controller
             ], static fn (mixed $value): bool => $value !== null),
         );
 
-        $docenteRole = Role::query()
-            ->where('name', 'Docente')
-            ->where('guard_name', 'web')
-            ->first();
+        $docenteRole = $this->resolveDocenteRoleWithPanelAccess();
 
         if (
             $docenteRole
@@ -161,6 +160,32 @@ class SsoController extends Controller
         $request->session()->put(self::SESSION_CHECK_LAST_AT, now()->timestamp);
 
         return redirect()->intended(Filament::getUrl());
+    }
+
+    private function resolveDocenteRoleWithPanelAccess(): ?Role
+    {
+        if (! class_exists(Role::class) || ! class_exists(Permission::class)) {
+            return null;
+        }
+
+        /** @var Role $docenteRole */
+        $docenteRole = Role::query()->firstOrCreate([
+            'name' => 'Docente',
+            'guard_name' => 'web',
+        ]);
+
+        /** @var Permission $panelPermission */
+        $panelPermission = Permission::query()->firstOrCreate([
+            'name' => 'panel_user',
+            'guard_name' => 'web',
+        ]);
+
+        if (! $docenteRole->hasPermissionTo($panelPermission)) {
+            $docenteRole->givePermissionTo($panelPermission);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        }
+
+        return $docenteRole;
     }
 
     public function startSessionCheck(Request $request): RedirectResponse

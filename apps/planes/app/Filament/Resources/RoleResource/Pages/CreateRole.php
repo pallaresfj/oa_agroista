@@ -22,7 +22,11 @@ class CreateRole extends CreateRecord
             })
             ->values()
             ->flatten()
-            ->unique();
+            ->unique()
+            ->push($this->panelAccessPermissionName())
+            ->filter(static fn (mixed $permission): bool => filled($permission))
+            ->unique()
+            ->values();
 
         if (Arr::has($data, Utils::getTenantModelForeignKey())) {
             return Arr::only($data, ['name', 'guard_name', Utils::getTenantModelForeignKey()]);
@@ -33,15 +37,24 @@ class CreateRole extends CreateRecord
 
     protected function afterCreate(): void
     {
+        $guardName = (string) ($this->data['guard_name'] ?? Utils::getFilamentAuthGuard());
         $permissionModels = collect();
-        $this->permissions->each(function ($permission) use ($permissionModels) {
+
+        $this->permissions->each(function ($permission) use ($permissionModels, $guardName) {
             $permissionModels->push(Utils::getPermissionModel()::firstOrCreate([
                 /** @phpstan-ignore-next-line */
                 'name' => $permission,
-                'guard_name' => $this->data['guard_name'],
+                'guard_name' => $guardName,
             ]));
         });
 
         $this->record->syncPermissions($permissionModels);
+    }
+
+    private function panelAccessPermissionName(): string
+    {
+        $name = trim((string) config('filament-shield.panel_user.name', 'panel_user'));
+
+        return $name !== '' ? $name : 'panel_user';
     }
 }
