@@ -6,17 +6,19 @@ Date: 2026-03-07
 
 ### 1) Shared package scaffold (`agroista/core`)
 
-- `agroista/core/composer.json`
-- OIDC client: `src/Sso/OidcClient.php`
-- Local provisioning strategy: `src/Auth/LocalUserProvisioner.php`
+- `core/composer.json`
+- OIDC client: `core/src/Sso/OidcClient.php`
+- Local provisioning strategy: `core/src/Auth/LocalUserProvisioner.php`
 - Institution API client + cache context:
-  - `src/Institution/InstitutionConfigClient.php`
-  - `src/Institution/InstitutionContext.php`
+  - `core/src/Institution/InstitutionConfigClient.php`
+  - `core/src/Institution/InstitutionContext.php`
 - Provider + package config:
-  - `src/CoreServiceProvider.php`
-  - `config/agroista-core.php`
+  - `core/src/CoreServiceProvider.php`
+  - `core/config/agroista-core.php`
 
 ### 2) `auth` as configurable identity hub
+
+Implemented in `apps/auth`:
 
 - New data model:
   - `institutions`
@@ -36,7 +38,7 @@ Date: 2026-03-07
 
 ### 3) Client apps federation minimum
 
-Implemented in `gestionplanes`, `silo`, `teachingassistance`:
+Implemented in `apps/planes`, `apps/silo`, `apps/asistencia`:
 
 - Users federation migration:
   - `auth_subject` (unique nullable)
@@ -50,21 +52,22 @@ Implemented in `gestionplanes`, `silo`, `teachingassistance`:
 
 ### 4) Infra template for institutional replication
 
-- `agroista/infra/docker-compose.institucion-template.yml`
-- `agroista/infra/README.md`
+- `infra/docker-compose.institucion-template.yml`
+- `infra/README.md`
 
-## Validation run
+### 5) Monorepo migration completed
 
-- PHP syntax checks passed for all new/changed files.
-- Route checks passed:
-  - auth API ecosystem routes registered
-  - auth Filament resources registered
-  - SSO callback routes intact in all 3 client apps
+- `oa_auth`, `oa_planes`, `oa_asistencia`, `oa_silo` imported into:
+  - `apps/auth`
+  - `apps/planes`
+  - `apps/asistencia`
+  - `apps/silo`
+- Migration executed with `git subtree` preserving history.
+- Single Git repository is now `oa_agroista`.
 
 ## Pending for next iteration
 
-- Wire `agroista/core` as Composer dependency in each app repository (target: VCS package, not local path).
-- Enforce `client_credentials` scope middleware for ecosystem API reads/writes.
-- Full RBAC migration for `silo` and `teachingassistance` to Shield/Spatie.
-- CI/CD reusable workflows and institutional fork governance automation.
-
+- Define path strategy for `agroista/core` in monorepo (`core` source of truth).
+- CI/CD path-based workflows per app in monorepo.
+- Full RBAC migration for `apps/silo` and `apps/asistencia` to Shield/Spatie.
+- Institutional replication playbook from monorepo template.

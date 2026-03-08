@@ -1,0 +1,30 @@
+# oa_agroista Monorepo
+
+Monorepo del ecosistema OA con una sola institucion por despliegue.
+
+## Estructura
+
+- `apps/auth`: Identity Provider (OAuth2/OIDC + Socialite Google)
+- `apps/planes`: App de planes academicos
+- `apps/asistencia`: App de asistencia
+- `apps/silo`: App de gestion agropecuaria
+- `core`: Paquete compartido `agroista/core`
+- `infra`: Plantillas de despliegue Dokploy/Hostinger
+
+## Regla operativa
+
+Todo cambio del ecosistema se hace en este repositorio.
+No trabajar en carpetas externas `oa_auth`, `oa_planes`, `oa_asistencia`, `oa_silo` para evitar divergencia.
+
+## Flujo base
+
+1. Crear rama en este repo.
+2. Cambiar solo en `apps/*`, `core` o `infra`.
+3. Validar pruebas por app modificada.
+4. Push y PR en este repo.
+
+## Notas de despliegue
+
+- Cada app se despliega como servicio independiente en Dokploy.
+- Cada app mantiene su base de datos propia.
+- Integracion entre apps solo via API y tokens de `auth`.
