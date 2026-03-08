@@ -16,19 +16,19 @@ class OAuthClientsSeeder extends Seeder
         $definitions = [
             [
                 'name' => 'planes',
-                'redirect_uris' => ['https://gestionplanes.test/sso/callback'],
+                'redirect_uris' => ['https://oa-planes.test/sso/callback'],
                 'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
             ],
             [
                 'name' => 'asistencia',
-                'redirect_uris' => ['https://teachingassistance.test/sso/callback'],
+                'redirect_uris' => ['https://oa-asistencia.test/sso/callback'],
                 'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
             ],
             [
                 'name' => 'silo',
                 'redirect_uris' => [
-                    'https://silo.asyservicios.com/sso/callback',
-                    'https://silo.asyservicios.com/sso/session-check/callback',
+                    'https://oa-silo.test/sso/callback',
+                    'https://oa-silo.test/sso/session-check/callback',
                 ],
                 'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
             ],
