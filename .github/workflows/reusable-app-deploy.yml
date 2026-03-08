@@ -1,0 +1,31 @@
+name: Reusable App Deploy
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+    secrets:
+      dokploy_webhook:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy (${{ inputs.app_name }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Dokploy webhook
+        env:
+          DOKPLOY_WEBHOOK: ${{ secrets.dokploy_webhook }}
+        run: |
+          if [ -z "$DOKPLOY_WEBHOOK" ]; then
+            echo "Missing Dokploy webhook secret."
+            exit 1
+          fi
+
+          curl -fsSL -X POST "$DOKPLOY_WEBHOOK"
+          echo "Deploy webhook triggered for ${{ inputs.app_name }}."

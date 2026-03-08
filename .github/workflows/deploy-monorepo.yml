@@ -1,0 +1,94 @@
+name: Deploy Monorepo
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/**"
+      - "core/**"
+      - ".github/workflows/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-monorepo-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changed apps
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      planes: ${{ steps.filter.outputs.planes }}
+      asistencia: ${{ steps.filter.outputs.asistencia }}
+      silo: ${{ steps.filter.outputs.silo }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Paths filter
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            auth:
+              - 'apps/auth/**'
+              - 'core/**'
+              - '.github/workflows/**'
+            planes:
+              - 'apps/planes/**'
+              - 'core/**'
+              - '.github/workflows/**'
+            asistencia:
+              - 'apps/asistencia/**'
+              - 'core/**'
+              - '.github/workflows/**'
+            silo:
+              - 'apps/silo/**'
+              - 'core/**'
+              - '.github/workflows/**'
+
+  deploy-auth:
+    name: Deploy auth
+    needs: changes
+    if: needs.changes.outputs.auth == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/reusable-app-deploy.yml
+    with:
+      app_name: auth
+    secrets:
+      dokploy_webhook: ${{ secrets.DOKPLOY_WEBHOOK_AUTH }}
+
+  deploy-planes:
+    name: Deploy planes
+    needs: changes
+    if: needs.changes.outputs.planes == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/reusable-app-deploy.yml
+    with:
+      app_name: planes
+    secrets:
+      dokploy_webhook: ${{ secrets.DOKPLOY_WEBHOOK_PLANES }}
+
+  deploy-asistencia:
+    name: Deploy asistencia
+    needs: changes
+    if: needs.changes.outputs.asistencia == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/reusable-app-deploy.yml
+    with:
+      app_name: asistencia
+    secrets:
+      dokploy_webhook: ${{ secrets.DOKPLOY_WEBHOOK_ASISTENCIA }}
+
+  deploy-silo:
+    name: Deploy silo
+    needs: changes
+    if: needs.changes.outputs.silo == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/reusable-app-deploy.yml
+    with:
+      app_name: silo
+    secrets:
+      dokploy_webhook: ${{ secrets.DOKPLOY_WEBHOOK_SILO }}

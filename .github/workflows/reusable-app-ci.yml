@@ -1,0 +1,81 @@
+name: Reusable App CI
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        required: true
+        type: string
+      app_path:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: CI (${{ inputs.app_name }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.app_path }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          extensions: mbstring, intl, pdo_sqlite, sqlite3, pcntl
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ inputs.app_name }}-${{ hashFiles(format('{0}/composer.lock', inputs.app_path)) }}
+          restore-keys: |
+            composer-${{ runner.os }}-${{ inputs.app_name }}-
+
+      - name: Prepare env (sqlite)
+        run: |
+          cp .env.example .env
+          php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+
+          if grep -q '^DB_CONNECTION=' .env; then
+            sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
+          else
+            echo 'DB_CONNECTION=sqlite' >> .env
+          fi
+
+          if grep -q '^DB_DATABASE=' .env; then
+            sed -i 's#^DB_DATABASE=.*#DB_DATABASE=database/database.sqlite#' .env
+          else
+            echo 'DB_DATABASE=database/database.sqlite' >> .env
+          fi
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Generate app key
+        run: php artisan key:generate
+
+      - name: Run migrations
+        run: php artisan migrate --force
+
+      - name: Composer validate
+        run: composer validate --strict
+
+      - name: Pint
+        run: |
+          if [ -x ./vendor/bin/pint ]; then
+            ./vendor/bin/pint --test
+          else
+            echo "Pint not installed, skipping."
+          fi
+
+      - name: Tests
+        run: php artisan test
