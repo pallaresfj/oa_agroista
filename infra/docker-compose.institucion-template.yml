@@ -1,0 +1,106 @@
+services:
+  auth:
+    image: ghcr.io/<org>/auth:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_URL: https://auth.<institution-domain>
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: db_auth
+      DB_USERNAME: auth_user
+      DB_PASSWORD: change-me
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PREFIX: auth_
+      SESSION_DRIVER: redis
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+    depends_on:
+      - mysql
+      - redis
+
+  planes:
+    image: ghcr.io/<org>/planes:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_URL: https://planes.<institution-domain>
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: db_planes
+      DB_USERNAME: planes_user
+      DB_PASSWORD: change-me
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PREFIX: planes_
+      SSO_ISSUER: https://auth.<institution-domain>
+      SSO_DISCOVERY_URL: https://auth.<institution-domain>/.well-known/openid-configuration
+      AUTH_API_BASE: https://auth.<institution-domain>/api/ecosystem
+    depends_on:
+      - mysql
+      - redis
+      - auth
+
+  asistencia:
+    image: ghcr.io/<org>/asistencia:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_URL: https://asistencia.<institution-domain>
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: db_asistencia
+      DB_USERNAME: asistencia_user
+      DB_PASSWORD: change-me
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PREFIX: asistencia_
+      SSO_ISSUER: https://auth.<institution-domain>
+      SSO_DISCOVERY_URL: https://auth.<institution-domain>/.well-known/openid-configuration
+      AUTH_API_BASE: https://auth.<institution-domain>/api/ecosystem
+    depends_on:
+      - mysql
+      - redis
+      - auth
+
+  silo:
+    image: ghcr.io/<org>/silo:latest
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      APP_URL: https://silo.<institution-domain>
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: db_silo
+      DB_USERNAME: silo_user
+      DB_PASSWORD: change-me
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PREFIX: silo_
+      SSO_ISSUER: https://auth.<institution-domain>
+      SSO_DISCOVERY_URL: https://auth.<institution-domain>/.well-known/openid-configuration
+      AUTH_API_BASE: https://auth.<institution-domain>/api/ecosystem
+    depends_on:
+      - mysql
+      - redis
+      - auth
+
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: change-me-root
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+
+volumes:
+  mysql_data:
+  redis_data:
