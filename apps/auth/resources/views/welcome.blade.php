@@ -152,32 +152,20 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <a class="group flex flex-col p-5 bg-white dark:bg-[#1c261c] rounded-xl border border-slate-200 dark:border-[#293829] hover:border-primary/50 dark:hover:border-primary/50 transition-all hover:shadow-lg" href="https://planes.iedagropivijay.edu.co" target="_blank" rel="noopener noreferrer">
-                        <div class="text-primary mb-3">
-                            <span class="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">school</span>
+                    @forelse ($ecosystemApps ?? [] as $app)
+                        <a class="group flex flex-col p-5 bg-white dark:bg-[#1c261c] rounded-xl border border-slate-200 dark:border-[#293829] hover:border-primary/50 dark:hover:border-primary/50 transition-all hover:shadow-lg" href="{{ $app['url'] }}" target="_blank" rel="noopener noreferrer">
+                            <div class="text-primary mb-3">
+                                <span class="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">{{ $app['icon'] }}</span>
+                            </div>
+                            <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-1">{{ $app['name'] }}</h4>
+                            <p class="text-xs text-slate-500 dark:text-[#9db89d] leading-relaxed mb-3">{{ $app['description'] }}</p>
+                            <span class="mt-auto text-[10px] font-mono text-primary opacity-80 group-hover:opacity-100">{{ $app['host'] }}</span>
+                        </a>
+                    @empty
+                        <div class="md:col-span-3 rounded-xl border border-dashed border-slate-300 dark:border-[#293829] p-5 text-xs text-slate-500 dark:text-[#9db89d]">
+                            No hay aplicaciones activas del ecosistema para mostrar.
                         </div>
-                        <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-1">Gestion Academica</h4>
-                        <p class="text-xs text-slate-500 dark:text-[#9db89d] leading-relaxed mb-3">Plataforma integral de planeacion estrategica y seguimiento escolar.</p>
-                        <span class="mt-auto text-[10px] font-mono text-primary opacity-80 group-hover:opacity-100">planes.iedagropivijay.edu.co</span>
-                    </a>
-
-                    <a class="group flex flex-col p-5 bg-white dark:bg-[#1c261c] rounded-xl border border-slate-200 dark:border-[#293829] hover:border-primary/50 dark:hover:border-primary/50 transition-all hover:shadow-lg" href="https://asistencia.iedagropivijay.edu.co" target="_blank" rel="noopener noreferrer">
-                        <div class="text-primary mb-3">
-                            <span class="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">assignment_ind</span>
-                        </div>
-                        <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-1">Teaching Assistance</h4>
-                        <p class="text-xs text-slate-500 dark:text-[#9db89d] leading-relaxed mb-3">Sistema de control de asistencia docente y registro de actividades diarias.</p>
-                        <span class="mt-auto text-[10px] font-mono text-primary opacity-80 group-hover:opacity-100">asistencia.iedagropivijay.edu.co</span>
-                    </a>
-
-                    <a class="group flex flex-col p-5 bg-white dark:bg-[#1c261c] rounded-xl border border-slate-200 dark:border-[#293829] hover:border-primary/50 dark:hover:border-primary/50 transition-all hover:shadow-lg" href="https://silo.iedagropivijay.edu.co" target="_blank" rel="noopener noreferrer">
-                        <div class="text-primary mb-3">
-                            <span class="material-symbols-outlined text-3xl group-hover:scale-110 transition-transform">folder_managed</span>
-                        </div>
-                        <h4 class="text-slate-900 dark:text-white font-bold text-sm mb-1">SILO</h4>
-                        <p class="text-xs text-slate-500 dark:text-[#9db89d] leading-relaxed mb-3">Sistema de gestion documental para la administracion eficiente de archivos.</p>
-                        <span class="mt-auto text-[10px] font-mono text-primary opacity-80 group-hover:opacity-100">silo.iedagropivijay.edu.co</span>
-                    </a>
+                    @endforelse
                 </div>
             </section>
         </div>
