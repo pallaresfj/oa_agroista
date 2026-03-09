@@ -13,14 +13,7 @@ class RolePermissionSafeSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $roleNames = [
-            'super_admin',
-            'Soporte',
-            'Directivo',
-            'Centro',
-            'Area',
-            'Docente',
-        ];
+        $roleNames = ['super_admin', 'Soporte', 'Directivo', 'Centro', 'Area', 'Docente'];
 
         foreach ($roleNames as $roleName) {
             Role::query()->firstOrCreate([
@@ -33,6 +26,16 @@ class RolePermissionSafeSeeder extends Seeder
             'name' => 'panel_user',
             'guard_name' => 'web',
         ]);
+
+        $allPermissions = Permission::query()->pluck('name');
+
+        Role::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', ['super_admin', 'Soporte'])
+            ->get()
+            ->each(function (Role $role) use ($allPermissions): void {
+                $role->syncPermissions($allPermissions);
+            });
 
         Role::query()
             ->where('guard_name', 'web')

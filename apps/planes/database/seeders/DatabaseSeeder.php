@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,6 +16,14 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(\Database\Seeders\RoleSeeder::class);
         $this->call(\Database\Seeders\PanelAccessSeeder::class);
+
+        Artisan::call('shield:generate', [
+            '--all' => true,
+            '--panel' => 'admin',
+            '--option' => 'permissions',
+        ]);
+
+        $this->call(\Database\Seeders\RolePermissionSafeSeeder::class);
 
         $user = User::factory()->create([
             'name' => 'Super Administrador',
