@@ -49,7 +49,6 @@ php artisan key:generate
 - `GOOGLE_CLIENT_SECRET`
 - `GOOGLE_REDIRECT_URI`
 - `INSTITUTION_EMAIL_DOMAIN`
-- `SUPERADMIN_EMAILS`
 - `ISSUER`
 - `TOKEN_TTL_MINUTES`
 - `REFRESH_TOKEN_TTL_DAYS`
@@ -98,7 +97,6 @@ GOOGLE_CLIENT_SECRET=
 GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
 
 INSTITUTION_EMAIL_DOMAIN=iedagropivijay.edu.co
-SUPERADMIN_EMAILS=admin@iedagropivijay.edu.co
 
 TOKEN_TTL_MINUTES=30
 REFRESH_TOKEN_TTL_DAYS=14
@@ -201,23 +199,23 @@ Ruta: `https://auth.iedagropivijay.edu.co/admin`
 - Usuarios:
   - Ver `email`, `is_active`, `last_login_at`, `google_id`
   - Activar/desactivar usuarios
-- Clientes OAuth:
+- Apps ecosistema:
   - Crear/editar nombre
+  - Definir `slug`, `base_url`, estado activa/revocada
   - Definir redirect URIs exactas (sin wildcard, host permitido)
   - HTTPS obligatorio, excepto `http://localhost` y `http://127.0.0.1`
   - Definir scopes (`openid`, `email`, `profile`, ...)
-  - Revocar/activar cliente
+  - Revocar/activar app
   - Regenerar `client_secret`
+- Institución:
+  - Gestionar `name`, `nit`, `logo_url` y `color_palette`
 
-Acceso al panel:
-
-- Solo correos listados en `SUPERADMIN_EMAILS`
-- Usuario debe estar activo
+Acceso al panel: usuario con `role=superadmin` y `is_active=true`.
 
 ## Seeders incluidos
 
-- `SuperAdminsSeeder`: crea/actualiza superadmins desde `SUPERADMIN_EMAILS`
-- `OAuthClientsSeeder`: crea clientes base:
+- `SuperAdminsSeeder`: **solo bootstrap de transición**, asigna `role=superadmin` a correos en `SUPERADMIN_EMAILS` cuando ejecutes el seeder.
+- `OAuthClientsSeeder`: crea apps ecosistema base en `oauth_clients`:
   - `planes` → `https://gestionplanes.test/sso/callback`
   - `asistencia` → `https://teachingassistance.test/sso/callback`
   - `silo` → `http://localhost:8000/sso/callback`
@@ -238,7 +236,7 @@ php artisan tinker --execute="print_r(App\Models\OAuthClient::query()->get(['id'
 
 `client_secret` en texto plano solo se muestra al crear/regenerar el cliente.
 
-- Opción recomendada: panel Filament `admin/oauth-clients` → acción `Regenerar secret` y copiar el valor.
+- Opción recomendada: panel Filament `admin/ecosystem-apps` → acción `Regenerar secret` y copiar el valor.
 - Opción CLI (rota secreto y lo imprime una sola vez):
 
 ```bash

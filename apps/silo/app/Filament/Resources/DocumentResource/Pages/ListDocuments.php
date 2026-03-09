@@ -31,14 +31,11 @@ class ListDocuments extends ListRecords
     {
         return [
             Actions\CreateAction::make()
-                ->iconButton()
-                ->hiddenLabel()
                 ->tooltip('Crear documento'),
             Actions\Action::make('driveSyncStatus')
                 ->label(fn (): string => $this->getDriveSyncStatusLabel())
                 ->icon(fn (): string => $this->getDriveSyncStatusIcon())
-                ->iconButton()
-                ->hiddenLabel()
+                ->button()
                 ->tooltip(fn (): string => $this->getDriveSyncStatusLabel())
                 ->color(fn (): string => $this->getDriveSyncStatusColor())
                 ->modalHeading('Estado de sincronización de externos')
@@ -143,8 +140,7 @@ class ListDocuments extends ListRecords
             ])
                 ->label('Herramientas Drive')
                 ->icon('heroicon-o-cloud')
-                ->iconButton()
-                ->hiddenLabel()
+                ->button()
                 ->tooltip('Herramientas Drive')
                 ->visible(fn (): bool => $this->canUseDriveTools()),
         ];

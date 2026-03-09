@@ -11,7 +11,6 @@ class UserAppAccess extends Model
 
     protected $fillable = [
         'user_id',
-        'ecosystem_app_id',
         'client_id',
         'is_allowed',
     ];
@@ -26,10 +25,5 @@ class UserAppAccess extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function app(): BelongsTo
-    {
-        return $this->belongsTo(EcosystemApp::class, 'ecosystem_app_id');
     }
 }

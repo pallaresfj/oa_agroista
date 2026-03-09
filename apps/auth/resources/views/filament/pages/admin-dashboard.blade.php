@@ -24,7 +24,7 @@
             <div class="auth-dashboard-hero__actions">
                 <a href="{{ $links['oauthClients'] }}" class="auth-dashboard-primary-cta">
                     <x-filament::icon icon="heroicon-o-plus-circle" class="auth-dashboard-primary-cta__icon" />
-                    Crear cliente OAuth
+                    Crear app ecosistema
                 </a>
             </div>
         </section>
@@ -32,13 +32,13 @@
         <section class="auth-dashboard-section">
             <div class="auth-dashboard-section__header">
                 <h2 class="auth-dashboard-section__title">Ecosistema Institucional</h2>
-                <p class="auth-dashboard-section__meta">{{ count($ecosystem) }} cliente(s) activos</p>
+                <p class="auth-dashboard-section__meta">{{ count($ecosystem) }} app(s) activas</p>
             </div>
 
             @if (count($ecosystem) === 0)
                 <article class="auth-dashboard-empty-card">
-                    <p class="auth-dashboard-empty-card__title">No hay clientes OAuth activos</p>
-                    <p class="auth-dashboard-empty-card__text">Crea un cliente para habilitar integraciones entre aplicaciones.</p>
+                    <p class="auth-dashboard-empty-card__title">No hay apps ecosistema activas</p>
+                    <p class="auth-dashboard-empty-card__text">Crea una app para habilitar integraciones entre aplicaciones.</p>
                 </article>
             @else
                 <div class="auth-dashboard-ecosystem-grid">

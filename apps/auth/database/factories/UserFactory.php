@@ -14,6 +14,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'role' => 'user',
             'google_id' => null,
             'is_active' => true,
             'last_login_at' => null,

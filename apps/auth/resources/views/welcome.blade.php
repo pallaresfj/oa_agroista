@@ -1,9 +1,24 @@
 <!DOCTYPE html>
 <html class="dark" lang="es">
+@php
+    $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
+    $palette = $institutionBranding['palette'];
+    $institutionName = (string) ($institutionBranding['name'] ?? config('app.name', 'Institucion'));
+    $institutionLogoUrl = $institutionBranding['logo_url'] ?? null;
+@endphp
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Portal Unico - IED Jose Maria Herrera</title>
+    <title>Portal Unico - {{ $institutionName }}</title>
+    <style>
+        :root {
+            --color-primary: {{ $palette['primary'] }};
+            --color-success: {{ $palette['success'] }};
+            --color-info: {{ $palette['info'] }};
+            --color-warning: {{ $palette['warning'] }};
+            --color-danger: {{ $palette['danger'] }};
+        }
+    </style>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="sso-home bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
@@ -21,7 +36,7 @@
                 <div class="bg-primary p-3 rounded-xl shadow-lg shadow-primary/20">
                     <span class="material-symbols-outlined text-background-dark text-3xl font-bold">agriculture</span>
                 </div>
-                <h2 class="text-white text-xl font-bold tracking-tight">IED Jose Maria Herrera</h2>
+                <h2 class="text-white text-xl font-bold tracking-tight">{{ $institutionName }}</h2>
             </div>
 
             <div class="max-w-xl">
@@ -47,8 +62,8 @@
             <section class="bg-white dark:bg-[#1c261c] p-8 lg:p-10 rounded-2xl shadow-xl border border-slate-200 dark:border-[#293829]">
                 <div class="mb-6 flex justify-center">
                     <img
-                        src="{{ asset('images/logo-ied.png') }}"
-                        alt="Logo IED Agropecuaria Jose Maria Herrera"
+                        src="{{ $institutionLogoUrl ?: asset('images/logo-ied.png') }}"
+                        alt="Logo {{ $institutionName }}"
                         class="h-[100px] w-[100px] rounded-full object-cover ring-1 ring-primary/20 bg-white dark:bg-slate-900"
                         style="width: 100px; height: 100px;"
                         loading="eager"
@@ -63,6 +78,9 @@
                 @php
                     $accessMessage = session('error');
                     $successMessage = session('success');
+                    $user = auth()->user();
+                    $canAccessAdminPanel = $user instanceof \App\Models\User
+                        && $user->canAccessPanel(\Filament\Facades\Filament::getPanel('admin'));
 
                     if (! $accessMessage && request()->query('access') === 'denied') {
                         $accessMessage = 'Tu cuenta no tiene acceso al panel administrativo.';
@@ -89,6 +107,16 @@
                     <div class="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-700/40 dark:bg-emerald-900/20 dark:text-emerald-200">
                         Sesion activa como <strong>{{ auth()->user()->email }}</strong>.
                     </div>
+
+                    @if ($canAccessAdminPanel)
+                        <a
+                            class="mb-3 w-full flex items-center justify-center gap-3 bg-primary hover:bg-primary/90 text-white font-bold py-4 px-6 rounded-xl border-2 border-primary/80 transition-all active:scale-[0.98]"
+                            href="{{ url('/admin') }}"
+                        >
+                            <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
+                            <span>Ir al panel administrativo</span>
+                        </a>
+                    @endif
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -157,7 +185,7 @@
         <footer class="mt-auto pt-12 text-center lg:text-left">
             <div class="flex flex-col lg:flex-row items-center justify-between gap-4 text-slate-500 dark:text-[#9db89d] text-xs font-medium">
                 <p>
-                    &copy; 2026 IED Agropecuaria Jose Maria Herrera - Desarrollado por
+                    &copy; {{ date('Y') }} {{ $institutionName }} - Desarrollado por
                     <a class="hover:text-primary transition-colors" href="https://www.asyservicios.com" target="_blank" rel="noopener noreferrer">AS&amp;Servicios.com</a>.
                 </p>
             </div>

@@ -1,5 +1,16 @@
 <x-filament-panels::page.simple>
+    @php
+        $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
+        $primaryColor = (string) data_get($institutionBranding ?? [], 'palette.primary', '#f50404');
+        $rgb = sscanf(ltrim($primaryColor, '#'), '%02x%02x%02x') ?: [245, 4, 4];
+        $primaryRgb = implode(', ', array_map(static fn ($value): int => (int) $value, array_slice($rgb, 0, 3)));
+    @endphp
     <style>
+        :root {
+            --brand-primary: {{ $primaryColor }};
+            --brand-primary-rgb: {{ $primaryRgb }};
+        }
+
         .fi-simple-layout {
             background: #f6f6f8;
         }
@@ -44,7 +55,7 @@
         }
 
         .silo-access-brand-icon {
-            color: #0e5326;
+            color: var(--brand-primary);
             height: 2.45rem;
             width: 2.45rem;
         }
@@ -63,7 +74,7 @@
         }
 
         .silo-access-brand p {
-            color: rgba(14, 83, 38, 0.72);
+            color: rgba(var(--brand-primary-rgb), 0.72);
             font-size: 0.84rem;
             font-weight: 500;
             letter-spacing: 0.2em;
@@ -73,7 +84,7 @@
         .silo-access-card {
             background: #fff;
             border-radius: 0.75rem;
-            box-shadow: 0 24px 40px rgba(14, 83, 38, 0.08);
+            box-shadow: 0 24px 40px rgba(var(--brand-primary-rgb), 0.08);
             overflow: hidden;
             position: relative;
             width: min(100%, 640px);
@@ -85,7 +96,7 @@
         }
 
         .silo-access-card-accent {
-            background: #0e5326;
+            background: var(--brand-primary);
             height: 0.375rem;
             width: 100%;
         }
@@ -134,8 +145,8 @@
 
         .silo-access-illustration {
             align-items: center;
-            background: linear-gradient(135deg, rgba(14, 83, 38, 0.05), rgba(14, 83, 38, 0.2));
-            border: 1px solid rgba(14, 83, 38, 0.12);
+            background: linear-gradient(135deg, rgba(var(--brand-primary-rgb), 0.05), rgba(var(--brand-primary-rgb), 0.2));
+            border: 1px solid rgba(var(--brand-primary-rgb), 0.12);
             border-radius: 0.5rem;
             display: flex;
             height: 8rem;
@@ -154,17 +165,18 @@
             position: absolute;
         }
 
-        .silo-access-illustration-icon {
-            color: #0e5326;
-            height: 3.25rem;
-            opacity: 0.4;
+        .silo-access-illustration-graphic {
+            color: var(--brand-primary);
+            height: 5.25rem;
+            max-width: 15rem;
+            opacity: 0.95;
             position: relative;
-            width: 3.25rem;
+            width: 100%;
         }
 
         .silo-access-button {
             align-items: center;
-            background: #0e5326;
+            background: var(--brand-primary);
             border-radius: 0.5rem;
             color: #fff;
             display: inline-flex;
@@ -179,8 +191,8 @@
         }
 
         .silo-access-button:hover {
-            background: rgba(14, 83, 38, 0.92);
-            box-shadow: 0 10px 22px rgba(14, 83, 38, 0.24);
+            background: rgba(var(--brand-primary-rgb), 0.92);
+            box-shadow: 0 10px 22px rgba(var(--brand-primary-rgb), 0.24);
         }
 
         .silo-access-button:active {
@@ -210,13 +222,13 @@
         }
 
         .silo-access-legal a {
-            color: #0e5326;
+            color: var(--brand-primary);
             text-decoration: underline;
             text-underline-offset: 2px;
         }
 
         .silo-access-blob {
-            background: rgba(14, 83, 38, 0.08);
+            background: rgba(var(--brand-primary-rgb), 0.08);
             border-radius: 9999px;
             filter: blur(52px);
             height: 24rem;
@@ -270,7 +282,7 @@
                             d="M12.08 24L4 19.2479L9.95537 8.75216L18.04 13.4961L18.0446 4H29.9554L29.96 13.4961L38.0446 8.75216L44 19.2479L35.92 24L44 28.7521L38.0446 39.2479L29.96 34.5039L29.9554 44H18.0446L18.04 34.5039L9.95537 39.2479L4 28.7521L12.08 24Z"
                         />
                     </svg>
-                    <h1>Teaching Assistance</h1>
+                    <h1>{{ config('app.name', 'Teaching Assistance') }}</h1>
                 </div>
                 <p>SISTEMA DE ASISTENCIA DOCENTE</p>
             </header>
@@ -291,8 +303,16 @@
                     @endif
 
                     <div class="silo-access-illustration" aria-hidden="true">
-                        <svg class="silo-access-illustration-icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18 10V7H14.5l-2-2H9v3h2.67l1.6 1.6V10H9.5A4.5 4.5 0 0 0 5 14.5V15a3 3 0 1 0 6 0v-.5c0-.53-.14-1.03-.38-1.46h5.76A4.5 4.5 0 0 0 16 14.5V15a3 3 0 1 0 6 0v-.5A4.5 4.5 0 0 0 18 10Zm-10 8a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/>
+                        <svg class="silo-access-illustration-graphic" viewBox="0 0 280 110" fill="none">
+                            <circle cx="72" cy="52" r="14" fill="currentColor" opacity="0.18"/>
+                            <path d="M48 88c4-14 14-20 24-20s20 6 24 20H48Z" fill="currentColor" opacity="0.18"/>
+                            <circle cx="212" cy="52" r="14" fill="currentColor" opacity="0.18"/>
+                            <path d="M188 88c4-14 14-20 24-20s20 6 24 20h-48Z" fill="currentColor" opacity="0.18"/>
+                            <rect x="106" y="18" width="68" height="78" rx="10" fill="currentColor" opacity="0.24"/>
+                            <rect x="124" y="10" width="32" height="14" rx="6" fill="currentColor" opacity="0.36"/>
+                            <path d="M120 40h40M120 52h40M120 64h24" stroke="white" stroke-linecap="round" stroke-width="4"/>
+                            <circle cx="140" cy="78" r="12" stroke="currentColor" stroke-width="6" opacity="0.82"/>
+                            <path d="m134 78 5 5 9-10" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" opacity="0.92"/>
                         </svg>
                     </div>
 
@@ -307,7 +327,7 @@
 
             <footer class="silo-access-legal">
                 <p>
-                    (c) 2026 Teaching Assistance - IED Agropecuaria Jose Maria Herrera. Desarrollado por
+                    (c) {{ date('Y') }} {{ config('app.name', 'Teaching Assistance') }} - {{ data_get($institutionBranding ?? [], 'name', 'Institucion') }}. Desarrollado por
                     <a href="https://www.asyservicios.com" target="_blank" rel="noreferrer noopener">AS&amp;Servicios.com</a>
                 </p>
             </footer>

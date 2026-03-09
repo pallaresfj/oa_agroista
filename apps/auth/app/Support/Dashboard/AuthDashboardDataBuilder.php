@@ -2,7 +2,7 @@
 
 namespace App\Support\Dashboard;
 
-use App\Filament\Resources\OAuthClients\OAuthClientResource;
+use App\Filament\Resources\EcosystemApps\EcosystemAppResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\AuditLogin;
 use App\Models\OAuthClient;
@@ -110,7 +110,7 @@ class AuthDashboardDataBuilder
                 'description' => 'Gestiona la identidad institucional, monitorea la actividad OAuth y supervisa la seguridad desde tu centro de control.',
             ],
             'links' => [
-                'oauthClients' => OAuthClientResource::getUrl('index'),
+                'oauthClients' => EcosystemAppResource::getUrl('index'),
                 'users' => UserResource::getUrl('index'),
             ],
             'kpis' => [
@@ -129,7 +129,7 @@ class AuthDashboardDataBuilder
                     'tone' => 'success',
                 ],
                 [
-                    'label' => 'Clientes OAuth',
+                    'label' => 'Apps Ecosistema',
                     'value' => number_format($oauthClientsActive),
                     'hint' => number_format($oauthClientsRevoked).' revocados',
                     'icon' => 'heroicon-o-key',
@@ -162,7 +162,7 @@ class AuthDashboardDataBuilder
             'distribution' => $distribution,
             'support' => [
                 'title' => '¿Necesitas soporte?',
-                'description' => 'Nuestro equipo técnico está disponible para ayudarte con clientes OAuth, accesos y eventos de autenticación.',
+                'description' => 'Nuestro equipo técnico está disponible para ayudarte con apps ecosistema, accesos y eventos de autenticación.',
                 'mailto' => 'mailto:soporte@iedagropivijay.edu.co?subject=Soporte%20Auth%20Dashboard',
             ],
         ];
@@ -256,7 +256,7 @@ class AuthDashboardDataBuilder
             'description' => $this->resolveClientDescription($client->name),
             'host' => $host ?: 'Host no disponible',
             'icon' => $this->resolveClientIcon($client->name),
-            'manageUrl' => OAuthClientResource::getUrl('index', [
+            'manageUrl' => EcosystemAppResource::getUrl('index', [
                 'tableSearch' => $client->name,
             ]),
             'externalUrl' => $redirectUrl,

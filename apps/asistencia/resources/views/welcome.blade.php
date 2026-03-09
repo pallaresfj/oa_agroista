@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
+    $palette = data_get($institutionBranding ?? [], 'palette', []);
+    $institutionName = (string) data_get($institutionBranding ?? [], 'name', 'Institucion');
+@endphp
 
 <head>
     <meta charset="utf-8">
@@ -15,7 +20,7 @@
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#1d6362">
+    <meta name="theme-color" content="{{ data_get($palette, 'primary', '#f50404') }}">
 
     <style>
         *,
@@ -28,17 +33,17 @@
 
         :root {
             /* Custom palette */
-            --primary: #1d6362;
-            --primary-light: #2a8a88;
-            --primary-dark: #154847;
-            --success: #6b9a34;
-            --success-light: #8cb84e;
-            --info: #99ce93;
-            --info-light: #b5deb0;
-            --warning: #f8c508;
-            --warning-light: #fad544;
-            --danger: #f50404;
-            --danger-light: #f73a3a;
+            --primary: {{ data_get($palette, 'primary', '#f50404') }};
+            --primary-light: {{ data_get($palette, 'info', data_get($palette, 'primary', '#f50404')) }};
+            --primary-dark: {{ data_get($palette, 'danger', data_get($palette, 'primary', '#f50404')) }};
+            --success: {{ data_get($palette, 'success', '#00c853') }};
+            --success-light: {{ data_get($palette, 'info', data_get($palette, 'success', '#00c853')) }};
+            --info: {{ data_get($palette, 'info', '#0288d1') }};
+            --info-light: {{ data_get($palette, 'info', '#0288d1') }};
+            --warning: {{ data_get($palette, 'warning', '#ff9800') }};
+            --warning-light: {{ data_get($palette, 'warning', '#ff9800') }};
+            --danger: {{ data_get($palette, 'danger', '#b71c1c') }};
+            --danger-light: {{ data_get($palette, 'danger', '#b71c1c') }};
             /* Gray scale */
             --gray-50: #f9fafb;
             --gray-100: #f3f4f6;
@@ -512,7 +517,7 @@
         <div class="header-content">
             <a href="/" class="logo">
                 <div class="logo-icon">TA</div>
-                <span>Teaching Assistance</span>
+                <span>{{ config('app.name', 'Teaching Assistance') }}</span>
             </a>
             <nav class="nav-links">
                 @auth
@@ -535,7 +540,7 @@
             Sistema de Control de Asistencia
         </div>
         <h1>
-            Gestiona la asistencia de tu institución de forma <span>simple y eficiente</span>
+            Gestiona la asistencia de {{ $institutionName }} de forma <span>simple y eficiente</span>
         </h1>
         <p>
             Plataforma PWA para el registro de asistencia docente mediante códigos QR y validación por geolocalización.
@@ -572,7 +577,7 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>© {{ date('Y') }} Teaching Assistance. Desarrollado por <a href="https://asyservicios.com" target="_blank"
+        <p>© {{ date('Y') }} {{ config('app.name', 'Teaching Assistance') }}. Desarrollado por <a href="https://asyservicios.com" target="_blank"
                 style="color: var(--primary); text-decoration: none; font-weight: 500;">AS&Servicios.com</a></p>
     </footer>
 </body>

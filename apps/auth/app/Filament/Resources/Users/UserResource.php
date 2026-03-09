@@ -5,8 +5,10 @@ namespace App\Filament\Resources\Users;
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Models\User;
 use BackedEnum;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
@@ -15,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Validation\ValidationException;
 
 class UserResource extends Resource
 {
@@ -40,6 +43,13 @@ class UserResource extends Resource
                     ->label('Correo')
                     ->disabled()
                     ->dehydrated(false),
+                Select::make('role')
+                    ->label('Rol')
+                    ->required()
+                    ->options([
+                        'superadmin' => 'Superadmin',
+                        'user' => 'Usuario',
+                    ]),
                 TextInput::make('google_id')
                     ->label('Google ID')
                     ->disabled()
@@ -66,6 +76,12 @@ class UserResource extends Resource
                     ->label('Correo')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('role')
+                    ->label('Rol')
+                    ->formatStateUsing(static fn (string $state): string => $state === 'superadmin' ? 'Superadmin' : 'Usuario')
+                    ->badge()
+                    ->color(fn (string $state): string => $state === 'superadmin' ? 'danger' : 'gray')
+                    ->sortable(),
                 IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean()
@@ -85,6 +101,13 @@ class UserResource extends Resource
                 EditAction::make()
                     ->iconButton()
                     ->tooltip('Editar usuario'),
+                DeleteAction::make()
+                    ->iconButton()
+                    ->tooltip('Eliminar usuario')
+                    ->requiresConfirmation()
+                    ->modalDescription('Se eliminará permanentemente el usuario seleccionado.')
+                    ->successNotificationTitle('Usuario eliminado')
+                    ->using(fn (User $record): bool => static::deleteUser($record)),
             ])
             ->toolbarActions([])
             ->defaultSort('email');
@@ -95,5 +118,29 @@ class UserResource extends Resource
         return [
             'index' => ManageUsers::route('/'),
         ];
+    }
+
+    public static function deleteUser(User $record): bool
+    {
+        if ((int) $record->getKey() === (int) auth()->id()) {
+            throw ValidationException::withMessages([
+                'user' => 'No puedes eliminar tu propio usuario.',
+            ]);
+        }
+
+        if ($record->is_active && $record->isSuperAdmin()) {
+            $activeSuperAdmins = User::query()
+                ->where('role', 'superadmin')
+                ->where('is_active', true)
+                ->count();
+
+            if ($activeSuperAdmins <= 1) {
+                throw ValidationException::withMessages([
+                    'user' => 'No puedes eliminar el último superadmin activo.',
+                ]);
+            }
+        }
+
+        return (bool) $record->delete();
     }
 }

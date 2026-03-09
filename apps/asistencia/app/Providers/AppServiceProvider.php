@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Filament\Auth\LogoutResponse as FilamentLogoutResponse;
+use App\Support\Institution\InstitutionTheme;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -24,6 +26,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::share('institutionBranding', InstitutionTheme::branding());
+
         Role::created(function (Role $role): void {
             if (! (bool) config('filament-shield.panel_user.enabled', true)) {
                 return;

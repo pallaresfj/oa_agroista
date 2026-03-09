@@ -10,6 +10,8 @@ class OAuthClient extends Client
         'grant_types' => 'array',
         'scopes' => 'array',
         'redirect_uris' => 'array',
+        'frontchannel_logout_uris' => 'array',
         'revoked' => 'boolean',
+        'is_active' => 'boolean',
     ];
 }

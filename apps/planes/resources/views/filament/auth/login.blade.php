@@ -1,5 +1,16 @@
 <x-filament-panels::page.simple>
+    @php
+        $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
+        $primaryColor = (string) data_get($institutionBranding ?? [], 'palette.primary', '#f50404');
+        $rgb = sscanf(ltrim($primaryColor, '#'), '%02x%02x%02x') ?: [245, 4, 4];
+        $primaryRgb = implode(', ', array_map(static fn ($value): int => (int) $value, array_slice($rgb, 0, 3)));
+    @endphp
     <style>
+        :root {
+            --brand-primary: {{ $primaryColor }};
+            --brand-primary-rgb: {{ $primaryRgb }};
+        }
+
         .fi-simple-layout {
             background: #f6f6f8;
         }
@@ -55,7 +66,7 @@
         }
 
         .silo-access-brand-icon {
-            color: #0e5326;
+            color: var(--brand-primary);
             height: 2.45rem;
             width: 2.45rem;
         }
@@ -74,7 +85,7 @@
         }
 
         .silo-access-brand p {
-            color: rgba(14, 83, 38, 0.72);
+            color: rgba(var(--brand-primary-rgb), 0.72);
             font-size: 0.84rem;
             font-weight: 500;
             letter-spacing: 0.2em;
@@ -84,7 +95,7 @@
         .silo-access-card {
             background: #fff;
             border-radius: 0.75rem;
-            box-shadow: 0 24px 40px rgba(14, 83, 38, 0.08);
+            box-shadow: 0 24px 40px rgba(var(--brand-primary-rgb), 0.08);
             overflow: hidden;
             position: relative;
             width: min(100%, 640px);
@@ -96,7 +107,7 @@
         }
 
         .silo-access-card-accent {
-            background: #0e5326;
+            background: var(--brand-primary);
             height: 0.375rem;
             width: 100%;
         }
@@ -145,8 +156,8 @@
 
         .silo-access-illustration {
             align-items: center;
-            background: linear-gradient(135deg, rgba(14, 83, 38, 0.05), rgba(14, 83, 38, 0.2));
-            border: 1px solid rgba(14, 83, 38, 0.12);
+            background: linear-gradient(135deg, rgba(var(--brand-primary-rgb), 0.05), rgba(var(--brand-primary-rgb), 0.2));
+            border: 1px solid rgba(var(--brand-primary-rgb), 0.12);
             border-radius: 0.5rem;
             display: flex;
             height: 8rem;
@@ -165,17 +176,18 @@
             position: absolute;
         }
 
-        .silo-access-illustration-icon {
-            color: #0e5326;
-            height: 3.25rem;
-            opacity: 0.4;
+        .silo-access-illustration-graphic {
+            color: var(--brand-primary);
+            height: 5.25rem;
+            max-width: 15rem;
+            opacity: 0.95;
             position: relative;
-            width: 3.25rem;
+            width: 100%;
         }
 
         .silo-access-button {
             align-items: center;
-            background: #0e5326;
+            background: var(--brand-primary);
             border-radius: 0.5rem;
             color: #fff;
             display: inline-flex;
@@ -190,8 +202,8 @@
         }
 
         .silo-access-button:hover {
-            background: rgba(14, 83, 38, 0.92);
-            box-shadow: 0 10px 22px rgba(14, 83, 38, 0.24);
+            background: rgba(var(--brand-primary-rgb), 0.92);
+            box-shadow: 0 10px 22px rgba(var(--brand-primary-rgb), 0.24);
         }
 
         .silo-access-button:active {
@@ -221,13 +233,13 @@
         }
 
         .silo-access-legal a {
-            color: #0e5326;
+            color: var(--brand-primary);
             text-decoration: underline;
             text-underline-offset: 2px;
         }
 
         .silo-access-blob {
-            background: rgba(14, 83, 38, 0.08);
+            background: rgba(var(--brand-primary-rgb), 0.08);
             border-radius: 9999px;
             filter: blur(52px);
             height: 24rem;
@@ -302,8 +314,17 @@
                     @endif
 
                     <div class="silo-access-illustration" aria-hidden="true">
-                        <svg class="silo-access-illustration-icon" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M18 10V7H14.5l-2-2H9v3h2.67l1.6 1.6V10H9.5A4.5 4.5 0 0 0 5 14.5V15a3 3 0 1 0 6 0v-.5c0-.53-.14-1.03-.38-1.46h5.76A4.5 4.5 0 0 0 16 14.5V15a3 3 0 1 0 6 0v-.5A4.5 4.5 0 0 0 18 10Zm-10 8a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/>
+                        <svg class="silo-access-illustration-graphic" viewBox="0 0 280 110" fill="none">
+                            <rect x="34" y="20" width="132" height="72" rx="10" fill="currentColor" opacity="0.14"/>
+                            <rect x="48" y="30" width="104" height="56" rx="8" fill="currentColor" opacity="0.3"/>
+                            <path d="M62 44h76M62 56h76M62 68h46" stroke="white" stroke-linecap="round" stroke-width="4"/>
+                            <rect x="176" y="24" width="68" height="56" rx="8" fill="currentColor" opacity="0.18"/>
+                            <path d="M176 40h68" stroke="currentColor" stroke-width="4" opacity="0.6"/>
+                            <path d="M194 24v18M226 24v18" stroke="currentColor" stroke-width="4" opacity="0.6"/>
+                            <rect x="188" y="50" width="12" height="10" rx="2" fill="currentColor" opacity="0.58"/>
+                            <path d="m209 60 6 6 11-12" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="5" opacity="0.8"/>
+                            <circle cx="244" cy="76" r="14" stroke="currentColor" stroke-width="7" opacity="0.68"/>
+                            <path d="m252 84 11 11" stroke="currentColor" stroke-linecap="round" stroke-width="7" opacity="0.68"/>
                         </svg>
                     </div>
 

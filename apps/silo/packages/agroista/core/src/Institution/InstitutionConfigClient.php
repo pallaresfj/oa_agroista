@@ -38,7 +38,11 @@ class InstitutionConfigClient
             throw new RuntimeException('Missing AUTH_API_BASE / agroista-core.institution.api_base configuration.');
         }
 
-        $request = Http::acceptJson()->timeout((int) config('agroista-core.sso.http_timeout', 10));
+        $timeout = max(1, (int) config('agroista-core.institution.http_timeout', 3));
+        $request = Http::acceptJson()
+            ->connectTimeout(min(2, $timeout))
+            ->timeout($timeout)
+            ->withOptions(['allow_redirects' => false]);
         $token = trim((string) config('agroista-core.institution.api_token', ''));
 
         if ($token !== '') {
@@ -47,14 +51,22 @@ class InstitutionConfigClient
 
         $response = $request->get($url);
 
-        if ($response->failed()) {
+        if (! $response->successful()) {
             $message = (string) ($response->json('message') ?? $response->body());
-            throw new RuntimeException('Institution API error: '.Str::limit($message, 240));
+            throw new RuntimeException(sprintf(
+                'Institution API error (HTTP %d): %s',
+                $response->status(),
+                Str::limit($message, 240)
+            ));
+        }
+
+        $payload = $response->json();
+
+        if (! is_array($payload)) {
+            throw new RuntimeException('Institution API returned a non-JSON payload.');
         }
 
         /** @var array<string, mixed> $payload */
-        $payload = $response->json();
-
         return $payload;
     }
 }

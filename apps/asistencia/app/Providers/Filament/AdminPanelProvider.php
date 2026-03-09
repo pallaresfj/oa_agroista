@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('app')
             ->login(FilamentLogin::class)
             ->profile(null)
+            ->sidebarCollapsibleOnDesktop()
             ->userMenu(position: UserMenuPosition::Sidebar)
             ->colors(InstitutionTheme::filamentColors())
             ->favicon(asset('images/favicon.png'))
@@ -67,6 +68,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 FilamentShieldPlugin::make()
+                    ->navigationGroup('Configuración')
                     ->gridColumns([
                         'default' => 1,
                         'sm' => 2,

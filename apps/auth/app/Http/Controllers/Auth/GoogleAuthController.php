@@ -71,6 +71,9 @@ class GoogleAuthController extends Controller
 
         if (! $user->exists) {
             $user->is_active = true;
+            $user->role = 'user';
+        } elseif (! is_string($user->role) || trim($user->role) === '') {
+            $user->role = 'user';
         }
 
         $user->last_login_at = now();

@@ -2,44 +2,55 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Resources\OAuthClients\OAuthClientResource;
+use App\Filament\Resources\EcosystemApps\EcosystemAppResource;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
-class OAuthClientResourceTest extends TestCase
+class EcosystemAppResourceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_create_client_accepts_string_inputs_for_redirect_uris_and_scopes(): void
+    public function test_create_app_accepts_string_inputs_for_redirect_uris_and_scopes(): void
     {
-        $client = OAuthClientResource::createClient([
+        $client = EcosystemAppResource::createApp([
             'name' => 'Cliente de prueba',
-            'redirect_uris' => "http://localhost/callback,\nhttps://silo.asyservicios.com/sso/callback",
+            'slug' => 'cliente-prueba',
+            'base_url' => 'https://oa-silo.test',
+            'redirect_uris' => "http://localhost/callback,\nhttps://oa-silo.test/sso/callback",
+            'frontchannel_logout_uris' => "http://localhost/frontchannel-logout",
             'scopes' => "openid,email\nprofile",
+            'is_active' => true,
             'revoked' => false,
         ]);
 
         $this->assertSame(
-            ['http://localhost/callback', 'https://silo.asyservicios.com/sso/callback'],
+            ['http://localhost/callback', 'https://oa-silo.test/sso/callback'],
             $client->redirect_uris,
         );
         $this->assertSame(['openid', 'email', 'profile'], $client->scopes);
+        $this->assertSame('cliente-prueba', $client->slug);
+        $this->assertSame(['http://localhost/frontchannel-logout'], $client->frontchannel_logout_uris);
 
         $this->assertDatabaseHas('oauth_clients', [
             'id' => $client->getKey(),
             'name' => 'Cliente de prueba',
+            'slug' => 'cliente-prueba',
             'revoked' => false,
         ]);
     }
 
-    public function test_delete_client_removes_related_tokens_and_auth_codes(): void
+    public function test_delete_app_removes_related_tokens_and_auth_codes(): void
     {
-        $client = OAuthClientResource::createClient([
+        $client = EcosystemAppResource::createApp([
             'name' => 'Cliente para eliminar',
+            'slug' => 'cliente-eliminar',
+            'base_url' => 'http://localhost',
             'redirect_uris' => ['http://localhost/callback'],
+            'frontchannel_logout_uris' => [],
             'scopes' => ['openid', 'email', 'profile'],
+            'is_active' => true,
             'revoked' => false,
         ]);
 
@@ -71,7 +82,7 @@ class OAuthClientResourceTest extends TestCase
             'expires_at' => now()->addHour(),
         ]);
 
-        $deleted = OAuthClientResource::deleteClient($client->fresh());
+        $deleted = EcosystemAppResource::deleteApp($client->fresh());
 
         $this->assertTrue($deleted);
         $this->assertDatabaseMissing('oauth_clients', ['id' => $client->getKey()]);
@@ -82,7 +93,7 @@ class OAuthClientResourceTest extends TestCase
 
     public function test_generate_frontchannel_secret_entry_uses_valid_format(): void
     {
-        $entry = OAuthClientResource::generateFrontchannelSecretEntry('Planes-App');
+        $entry = EcosystemAppResource::generateFrontchannelSecretEntry('Planes-App');
 
         [$clientKey, $secret] = explode('|', $entry, 2);
 
@@ -94,6 +105,6 @@ class OAuthClientResourceTest extends TestCase
     {
         $this->expectException(ValidationException::class);
 
-        OAuthClientResource::generateFrontchannelSecretEntry('planes app');
+        EcosystemAppResource::generateFrontchannelSecretEntry('planes app');
     }
 }

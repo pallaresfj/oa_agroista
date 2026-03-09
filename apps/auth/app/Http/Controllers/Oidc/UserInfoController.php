@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Oidc;
 
 use App\Http\Controllers\Controller;
-use App\Models\Institution;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,9 +19,7 @@ class UserInfoController extends Controller
 
         $avatarUrl = trim((string) $user->google_avatar_url);
         $picture = filter_var($avatarUrl, FILTER_VALIDATE_URL) ? $avatarUrl : null;
-        $institutionCode = Institution::query()
-            ->where('is_active', true)
-            ->value('code') ?? env('INSTITUTION_CODE', 'default');
+        $institutionCode = (string) config('sso.institution_code', 'default');
 
         return response()->json([
             'sub' => (string) $user->getAuthIdentifier(),

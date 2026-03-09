@@ -12,7 +12,6 @@ class DatabaseSeeder extends Seeder
             InstitutionSeeder::class,
             SuperAdminsSeeder::class,
             OAuthClientsSeeder::class,
-            EcosystemAppsSeeder::class,
         ]);
     }
 }

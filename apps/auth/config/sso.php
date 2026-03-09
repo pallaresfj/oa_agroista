@@ -38,8 +38,6 @@ return [
 
     'institution_email_domains' => $csv(env('INSTITUTION_EMAIL_DOMAIN', 'iedagropivijay.edu.co')),
 
-    'superadmin_emails' => $csv(env('SUPERADMIN_EMAILS', '')),
-
     'token_ttl_minutes' => (int) env('TOKEN_TTL_MINUTES', 30),
 
     'refresh_token_ttl_days' => (int) env('REFRESH_TOKEN_TTL_DAYS', 14),

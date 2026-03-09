@@ -2,16 +2,17 @@
 
 namespace App\Support\Institution;
 
-use Agroista\Core\Institution\InstitutionContext;
+use App\Models\InstitutionSetting;
 use Filament\Support\Colors\Color;
+use Illuminate\Support\Collection;
 use Throwable;
 
 class InstitutionTheme
 {
     /**
-     * @var array<string, mixed>|null
+     * @var Collection<string, mixed>|null
      */
-    private static ?array $institutionCache = null;
+    private static ?Collection $settingsCache = null;
 
     /**
      * @var array<string, string>|null
@@ -33,28 +34,17 @@ class InstitutionTheme
         }
 
         $palette = self::defaultPalette();
-        $institution = self::institution();
-        $storedPalette = $institution['settings']['color_palette'] ?? null;
+        $settings = self::settings();
+        $savedPalette = $settings->get('color_palette');
 
-        if (is_array($storedPalette)) {
+        if (is_array($savedPalette)) {
             foreach (array_keys($palette) as $key) {
-                $color = self::normalizeColor($storedPalette[$key] ?? null);
+                $color = self::normalizeColor($savedPalette[$key] ?? null);
 
                 if ($color !== null) {
                     $palette[$key] = $color;
                 }
             }
-        }
-
-        $primary = self::normalizeColor($institution['primary_color'] ?? null);
-        $secondary = self::normalizeColor($institution['secondary_color'] ?? null);
-
-        if ($primary !== null) {
-            $palette['primary'] = $primary;
-        }
-
-        if ($secondary !== null) {
-            $palette['success'] = $secondary;
         }
 
         self::$paletteCache = $palette;
@@ -87,11 +77,11 @@ class InstitutionTheme
             return self::$brandingCache;
         }
 
-        $institution = self::institution();
+        $settings = self::settings();
         $palette = self::palette();
-        $name = trim((string) ($institution['name'] ?? ''));
-        $logoUrl = trim((string) ($institution['logo_url'] ?? ''));
-        $nit = trim((string) ($institution['settings']['nit'] ?? ''));
+        $name = trim((string) $settings->get('name', config('sso.institution_default_name', config('app.name', 'Institucion'))));
+        $nit = trim((string) $settings->get('nit', ''));
+        $logoUrl = trim((string) $settings->get('logo_url', ''));
 
         self::$brandingCache = [
             'name' => $name !== '' ? $name : (string) config('app.name', 'Institucion'),
@@ -106,27 +96,35 @@ class InstitutionTheme
     }
 
     /**
-     * @return array<string, mixed>
+     * @return Collection<string, mixed>
      */
-    private static function institution(): array
+    private static function settings(): Collection
     {
-        if (self::$institutionCache !== null) {
-            return self::$institutionCache;
+        if (self::$settingsCache !== null) {
+            return self::$settingsCache;
         }
 
         try {
-            /** @var InstitutionContext $context */
-            $context = app(InstitutionContext::class);
-            $institution = $context->institution();
+            self::$settingsCache = InstitutionSetting::query()
+                ->whereIn('key', ['name', 'nit', 'logo_url', 'color_palette'])
+                ->where('is_public', true)
+                ->get()
+                ->mapWithKeys(function (InstitutionSetting $setting): array {
+                    $value = $setting->value_json;
+
+                    if ($value === null) {
+                        $value = $setting->value_text;
+                    }
+
+                    return [$setting->key => $value];
+                });
+
+            return self::$settingsCache;
         } catch (Throwable) {
-            self::$institutionCache = [];
+            self::$settingsCache = collect();
 
-            return self::$institutionCache;
+            return self::$settingsCache;
         }
-
-        self::$institutionCache = is_array($institution) ? $institution : [];
-
-        return self::$institutionCache;
     }
 
     /**

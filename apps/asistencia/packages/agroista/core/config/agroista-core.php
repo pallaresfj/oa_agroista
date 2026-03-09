@@ -18,6 +18,7 @@ return [
         'api_base' => env('AUTH_API_BASE', ''),
         'api_token' => env('AUTH_API_TOKEN', ''),
         'cache_ttl' => (int) env('AUTH_INSTITUTION_CACHE_TTL', 300),
+        'http_timeout' => (int) env('AUTH_INSTITUTION_HTTP_TIMEOUT', 1),
         'default_code' => env('INSTITUTION_CODE', 'default'),
     ],
 

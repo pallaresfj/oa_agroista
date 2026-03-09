@@ -2,7 +2,6 @@
 
 namespace App\Entities;
 
-use App\Models\Institution;
 use App\Models\User;
 use League\OAuth2\Server\Entities\Traits\EntityTrait;
 use OpenIDConnect\Claims\Traits\WithClaims;
@@ -34,9 +33,7 @@ class IdentityEntity implements IdentityEntityInterface
     {
         $avatarUrl = trim((string) $this->user->google_avatar_url);
         $picture = filter_var($avatarUrl, FILTER_VALIDATE_URL) ? $avatarUrl : null;
-        $institutionCode = Institution::query()
-            ->where('is_active', true)
-            ->value('code') ?? env('INSTITUTION_CODE', 'default');
+        $institutionCode = (string) config('sso.institution_code', 'default');
 
         return [
             'name' => $this->user->name,

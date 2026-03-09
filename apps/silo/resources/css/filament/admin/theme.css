@@ -970,12 +970,13 @@
     position: absolute;
 }
 
-.silo-access-illustration-icon {
+.silo-access-illustration-graphic {
     color: #0e5326;
-    height: 3.25rem;
-    opacity: 0.4;
+    height: 5.25rem;
+    max-width: 15rem;
+    opacity: 0.95;
     position: relative;
-    width: 3.25rem;
+    width: 100%;
 }
 
 .silo-access-button {

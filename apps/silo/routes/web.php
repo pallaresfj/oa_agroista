@@ -9,6 +9,10 @@ Route::get('/', function () {
 });
 
 Route::middleware('guest')->group(function (): void {
+    Route::get('/login', function () {
+        return redirect()->route('sso.login');
+    })->name('login');
+
     Route::get('/sso/login', [SsoController::class, 'login'])->name('sso.login');
 
     Route::redirect('/auth/google/redirect', '/sso/login')->name('auth.google.redirect');

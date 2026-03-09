@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Filament\Auth\Responses\LogoutResponse as AppLogoutResponse;
+use App\Support\Institution\InstitutionTheme;
 use App\Support\Drive\Contracts\DriveSyncGateway;
 use App\Support\Drive\GoogleDriveSyncGateway;
 use App\Support\GoogleWorkspace\Contracts\WorkspaceUserDirectory;
@@ -10,6 +11,7 @@ use App\Support\GoogleWorkspace\GoogleWorkspaceUserDirectory;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
 use Spatie\Permission\Models\Permission;
@@ -33,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::share('institutionBranding', InstitutionTheme::branding());
+
         Role::created(function (Role $role): void {
             if (! (bool) config('filament-shield.panel_user.enabled', true)) {
                 return;

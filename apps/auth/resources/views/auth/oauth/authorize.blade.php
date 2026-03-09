@@ -1,14 +1,18 @@
 <!doctype html>
 <html lang="es">
+@php
+    $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
+    $palette = $institutionBranding['palette'];
+@endphp
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SILO - Solicitud de autorizacion</title>
+    <title>{{ $institutionBranding['name'] ?? 'Institucion' }} - Solicitud de autorizacion</title>
     <style>
         :root {
-            --primary: #1d6362;
-            --primary-dark: #154847;
-            --primary-soft: #e7f3f2;
+            --primary: {{ $palette['primary'] }};
+            --primary-dark: {{ $palette['danger'] }};
+            --primary-soft: {{ $palette['info'] }};
             --bg: #f6f6f8;
             --card: #ffffff;
             --muted: #64748b;

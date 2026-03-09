@@ -79,7 +79,7 @@ class SsoController extends Controller
         $code = (string) $request->query('code', '');
 
         if ($expectedState === '' || $receivedState === '' || ! hash_equals($expectedState, $receivedState)) {
-            return $this->fail('Error de seguridad (state mismatch).');
+            return $this->fail('Tu intento de inicio de sesión expiró. Haz clic de nuevo en "Ingresar con Cuenta Institucional".');
         }
 
         if ($code === '' || $codeVerifier === '') {

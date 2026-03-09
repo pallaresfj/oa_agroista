@@ -13,8 +13,6 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'institution.name' => 'Mi Institución Educativa',
-            'institution.logo_path' => null,
             'attendance.early_check_in_minutes' => '30',
         ];
 

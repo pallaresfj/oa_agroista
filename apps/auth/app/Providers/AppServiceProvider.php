@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Filament\Auth\Responses\LogoutResponse as AppLogoutResponse;
+use App\Support\Institution\InstitutionTheme;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as FilamentLogoutResponse;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Contracts\AuthorizationViewResponse;
 use Laravel\Passport\Http\Responses\SimpleViewResponse;
@@ -24,6 +26,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::share('institutionBranding', InstitutionTheme::branding());
     }
 }

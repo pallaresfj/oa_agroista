@@ -7,6 +7,7 @@
     <title>GESTIÓN ACADÉMICA</title>
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.institution-theme')
   </head>
 
   <body class="bg-white text-gray-700">
@@ -15,7 +16,7 @@
     <header class="bg-white shadow-md">
       <nav x-data="{ open: false }" class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
         <a href="/" class="flex items-center space-x-2">
-          <img src="{{ asset('images/logo.svg') }}" alt="Logo" class="h-16">
+          <img src="{{ data_get($institutionBranding ?? [], 'logo_url') ?: asset('images/logo.svg') }}" alt="Logo" class="h-16">
         </a>
 
         <button @click="open = !open" class="md:hidden text-gray-700 focus:outline-none transition-transform duration-300 transform" :class="{'rotate-45': open}">
@@ -175,7 +176,7 @@
 
     <footer class="bg-gray-900 text-gray-300 py-6">
       <div class="max-w-7xl mx-auto text-center text-sm">
-        <p>Copyright 2025. IED Agropecuaria José María Herrera - Pivijay | Diseño <a rel="nofollow" href="https://asyservicios.com" target="_blank" class="text-green-500 hover:underline">AS&Servicios.com</a></p>
+        <p>Copyright 2025. {{ data_get($institutionBranding ?? [], 'name', config('app.name', 'Institucion')) }} - Pivijay | Diseño <a rel="nofollow" href="https://asyservicios.com" target="_blank" class="text-green-500 hover:underline">AS&Servicios.com</a></p>
       </div>
     </footer>
 

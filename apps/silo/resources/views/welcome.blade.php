@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+@php
+    $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
+    $palette = data_get($institutionBranding ?? [], 'palette', []);
+    $institutionName = (string) data_get($institutionBranding ?? [], 'name', 'Institucion');
+@endphp
 
 <head>
     <meta charset="utf-8">
@@ -13,13 +18,13 @@
 
     <style>
         :root {
-            --color-primary: #1d6362;
-            --color-primary-dark: #153f3e;
-            --color-primary-light: #2a8482;
-            --color-success: #6b9a34;
-            --color-info: #99ce93;
-            --color-warning: #f8c508;
-            --color-danger: #f50404;
+            --color-primary: {{ data_get($palette, 'primary', '#f50404') }};
+            --color-primary-dark: {{ data_get($palette, 'danger', data_get($palette, 'primary', '#f50404')) }};
+            --color-primary-light: {{ data_get($palette, 'info', data_get($palette, 'primary', '#f50404')) }};
+            --color-success: {{ data_get($palette, 'success', '#00c853') }};
+            --color-info: {{ data_get($palette, 'info', '#0288d1') }};
+            --color-warning: {{ data_get($palette, 'warning', '#ff9800') }};
+            --color-danger: {{ data_get($palette, 'danger', '#b71c1c') }};
             --color-white: #ffffff;
             --color-gray-50: #f9fafb;
             --color-gray-100: #f3f4f6;
@@ -479,7 +484,7 @@
             <div class="logo-section">
                 <div class="logo">S</div>
                 <div class="brand-name">
-                    <h1>SILO</h1>
+                    <h1>{{ config('app.name', 'SILO') }}</h1>
                     <p>Sistema de Gestión Documental</p>
                 </div>
             </div>
@@ -501,7 +506,7 @@
                 Gestión Documental <span class="highlight">Inteligente y Eficiente</span>
             </h2>
             <p>
-                Sistema integral de gestión documental para la IED Agropecuaria José María Herrera.
+                Sistema integral de gestión documental para {{ $institutionName }}.
                 Organiza, clasifica y accede a tus documentos institucionales de manera rápida y segura.
             </p>
             <div class="hero-cta">
@@ -576,7 +581,7 @@
                     <h5>SILO - Sistema de Gestión Documental</h5>
                     <p>
                         Plataforma desarrollada para optimizar la gestión documental institucional
-                        de la IED Agropecuaria José María Herrera, facilitando el acceso,
+                        de {{ $institutionName }}, facilitando el acceso,
                         organización y control de documentos importantes.
                     </p>
                 </div>
@@ -605,7 +610,7 @@
                     Desarrollado por <a href="https://www.asyservicios.com" target="_blank">AS&Servicios.com</a>
                 </div>
                 <div>
-                    Propiedad de <strong>IED Agropecuaria José María Herrera</strong>
+                    Propiedad de <strong>{{ $institutionName }}</strong>
                 </div>
             </div>
         </div>

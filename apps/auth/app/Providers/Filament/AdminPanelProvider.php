@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\AdminDashboard;
 use App\Http\Middleware\EnsureGoogleSessionIsAlive;
 use App\Http\Middleware\FilamentAuthenticate;
+use App\Support\Institution\InstitutionTheme;
 use Filament\Enums\UserMenuPosition;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -29,14 +30,9 @@ class AdminPanelProvider extends PanelProvider
             ->login(\App\Filament\Pages\Auth\Login::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->profile(null)
+            ->sidebarCollapsibleOnDesktop()
             ->userMenu(position: UserMenuPosition::Sidebar)
-            ->colors([
-                'primary' => '#1d6362',
-                'success' => '#6b9a34',
-                'info' => '#99ce93',
-                'warning' => '#f8c508',
-                'danger' => '#f50404',
-            ])
+            ->colors(InstitutionTheme::filamentColors())
             ->favicon(asset('images/favicon.png'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

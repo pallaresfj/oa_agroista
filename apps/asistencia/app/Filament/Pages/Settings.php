@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
-use Filament\Forms\Components\FileUpload;
 use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Contracts\HasForms;
@@ -12,7 +11,6 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class Settings extends Page implements HasForms
 {
@@ -34,7 +32,7 @@ class Settings extends Page implements HasForms
 
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
-        return null;
+        return 'Configuración';
     }
 
     public static function getNavigationIcon(): string|\BackedEnum|null
@@ -45,8 +43,6 @@ class Settings extends Page implements HasForms
     public function mount(): void
     {
         $this->form->fill([
-            'institution_name' => Setting::getValue('institution.name'),
-            'institution_logo' => Setting::getValue('institution.logo_path'),
             'early_check_in_minutes' => Setting::getValue(
                 'attendance.early_check_in_minutes',
                 config('attendance.early_check_in_minutes', 30)
@@ -58,22 +54,6 @@ class Settings extends Page implements HasForms
     {
         return $schema
             ->components([
-                Section::make('Institución')
-                    ->schema([
-                        TextInput::make('institution_name')
-                            ->label('Nombre de la institución')
-                            ->maxLength(255),
-                        FileUpload::make('institution_logo')
-                            ->label('Logo o escudo')
-                            ->disk('public')
-                            ->directory('settings')
-                            ->image()
-                            ->imageEditor()
-                            ->imageCropAspectRatio('1:1')
-                            ->visibility('public')
-                            ->deleteUploadedFileUsing(fn (string $file): bool => Storage::disk('public')->delete($file)),
-                    ])
-                    ->columns(2),
                 Section::make('Asistencia')
                     ->schema([
                         TextInput::make('early_check_in_minutes')
@@ -91,8 +71,6 @@ class Settings extends Page implements HasForms
     {
         $state = $this->form->getState();
 
-        Setting::setValue('institution.name', $state['institution_name'] ?? null);
-        Setting::setValue('institution.logo_path', $state['institution_logo'] ?? null);
         Setting::setValue('attendance.early_check_in_minutes', $state['early_check_in_minutes'] ?? null);
 
         Notification::make()

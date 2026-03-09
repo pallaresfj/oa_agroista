@@ -20,6 +20,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected $fillable = [
         'name',
         'email',
+        'role',
         'google_id',
         'google_avatar_url',
         'is_active',
@@ -31,6 +32,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     protected function casts(): array
     {
         return [
+            'role' => 'string',
             'is_active' => 'boolean',
             'last_login_at' => 'datetime',
         ];
@@ -43,9 +45,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function isSuperAdmin(): bool
     {
-        $superAdminEmails = config('sso.superadmin_emails', []);
-
-        return in_array(mb_strtolower((string) $this->email), $superAdminEmails, true);
+        return mb_strtolower((string) $this->role) === 'superadmin';
     }
 
     public function getFilamentAvatarUrl(): ?string

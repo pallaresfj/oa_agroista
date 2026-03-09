@@ -32,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->login(Login::class)
             ->profile(null)
+            ->sidebarCollapsibleOnDesktop()
             ->userMenu(position: UserMenuPosition::Sidebar)
             ->colors(InstitutionTheme::filamentColors())
             ->favicon(asset('images/favicon.png'))

@@ -321,13 +321,13 @@ class GoogleAuthControllerTest extends TestCase
 
     public function test_middleware_redirects_authenticated_panel_requests_to_session_check(): void
     {
-        config()->set('sso.superadmin_emails', ['admin@iedagropivijay.edu.co']);
         config()->set('sso.google_session_check_enabled', true);
         config()->set('sso.google_session_check_interval_seconds', 60);
 
         $user = User::query()->create([
             'name' => 'Admin',
             'email' => 'admin@iedagropivijay.edu.co',
+            'role' => 'superadmin',
             'google_id' => 'google-admin',
             'is_active' => true,
         ]);
@@ -343,12 +343,12 @@ class GoogleAuthControllerTest extends TestCase
 
     public function test_admin_logout_post_does_not_require_csrf_token(): void
     {
-        config()->set('sso.superadmin_emails', ['admin@iedagropivijay.edu.co']);
         config()->set('sso.google_session_check_enabled', false);
 
         $user = User::query()->create([
             'name' => 'Admin',
             'email' => 'admin@iedagropivijay.edu.co',
+            'role' => 'superadmin',
             'google_id' => 'google-admin',
             'is_active' => true,
         ]);
