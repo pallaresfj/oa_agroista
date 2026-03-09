@@ -109,7 +109,6 @@ class SsoController extends Controller
         $email = Str::lower(trim((string) ($claims['email'] ?? '')));
         $name = trim((string) ($claims['name'] ?? $email));
         $subject = trim((string) ($claims['sub'] ?? ''));
-        $institutionCode = trim((string) ($claims['institution_code'] ?? config('sso.institution_code', 'default')));
         $isActive = array_key_exists('is_active', $claims) ? (bool) $claims['is_active'] : true;
         $avatarCandidate = trim((string) ($claims['picture'] ?? $claims['avatar'] ?? $claims['google_avatar_url'] ?? ''));
         $googleAvatarUrl = filter_var($avatarCandidate, FILTER_VALIDATE_URL) ? $avatarCandidate : null;
@@ -133,7 +132,6 @@ class SsoController extends Controller
             array_filter([
                 'name' => $name === '' ? $email : $name,
                 'auth_subject' => $subject,
-                'institution_code' => $institutionCode !== '' ? $institutionCode : null,
                 'google_avatar_url' => $googleAvatarUrl,
                 'last_sso_login_at' => now(),
                 'password' => $alreadyExists ? null : Hash::make(Str::password(40)),
@@ -258,7 +256,6 @@ class SsoController extends Controller
 
         $email = Str::lower(trim((string) ($claims['email'] ?? '')));
         $subject = trim((string) ($claims['sub'] ?? ''));
-        $institutionCode = trim((string) ($claims['institution_code'] ?? config('sso.institution_code', 'default')));
         $isActive = array_key_exists('is_active', $claims) ? (bool) $claims['is_active'] : true;
 
         if ($email === '' || $subject === '' || ! $isActive) {
@@ -286,7 +283,6 @@ class SsoController extends Controller
         }
 
         $user->auth_subject = $subject;
-        $user->institution_code = $institutionCode !== '' ? $institutionCode : $user->institution_code;
         $user->last_sso_login_at = now();
         $user->save();
 

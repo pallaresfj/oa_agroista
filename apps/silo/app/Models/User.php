@@ -39,7 +39,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'name',
         'email',
         'auth_subject',
-        'institution_code',
         'password',
         'google_avatar_url',
         'last_sso_login_at',

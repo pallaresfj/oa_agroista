@@ -10,7 +10,6 @@ return new class extends Migration
     {
         Schema::create('institution_settings', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('institution_id')->constrained()->cascadeOnDelete();
             $table->string('key');
             $table->string('type', 32)->default('string');
             $table->json('value_json')->nullable();
@@ -18,7 +17,7 @@ return new class extends Migration
             $table->boolean('is_public')->default(true);
             $table->timestamps();
 
-            $table->unique(['institution_id', 'key']);
+            $table->unique('key');
         });
     }
 

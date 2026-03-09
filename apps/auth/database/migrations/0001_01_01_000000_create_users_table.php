@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('role', 32)->default('user')->index();
             $table->string('google_id')->nullable()->unique();
             $table->string('google_avatar_url')->nullable();
             $table->boolean('is_active')->default(true);

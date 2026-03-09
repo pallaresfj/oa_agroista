@@ -15,11 +15,16 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->nullableMorphs('owner');
             $table->string('name');
+            $table->string('slug', 120)->nullable()->unique();
+            $table->string('base_url')->nullable();
             $table->string('secret')->nullable();
             $table->string('provider')->nullable();
             $table->text('redirect_uris');
+            $table->json('frontchannel_logout_uris')->nullable();
             $table->text('grant_types');
+            $table->json('scopes')->nullable();
             $table->boolean('revoked');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
