@@ -85,7 +85,7 @@ class GoogleAuthController extends Controller
         }
 
         $user = User::query()
-            ->where('google_subject', $subject)
+            ->where('auth_subject', $subject)
             ->orWhere('email', $email)
             ->first();
 
@@ -108,9 +108,9 @@ class GoogleAuthController extends Controller
         $user->fill([
             'name' => $googleUser->getName() ?: $user->name ?: $email,
             'email' => $email,
-            'google_subject' => $subject,
+            'auth_subject' => $subject,
             'google_avatar_url' => $googleUser->getAvatar(),
-            'last_google_login_at' => now(),
+            'last_sso_login_at' => now(),
         ]);
 
         if ($isEmailVerified && $user->email_verified_at === null) {

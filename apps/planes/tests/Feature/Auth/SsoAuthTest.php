@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use App\Services\Sso\OidcClient;
+use Agroista\Core\Sso\OidcClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 

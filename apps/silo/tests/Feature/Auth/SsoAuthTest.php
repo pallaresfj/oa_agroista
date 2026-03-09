@@ -66,8 +66,8 @@ it('creates or updates local user and authenticates with valid sso callback', fu
     $user = User::query()->where('email', 'docente@iedagropivijay.edu.co')->first();
 
     expect($user)->not->toBeNull();
-    expect($user?->google_subject)->toBe('subject-1');
-    expect($user?->last_google_login_at)->not->toBeNull();
+    expect($user?->auth_subject)->toBe('subject-1');
+    expect($user?->last_sso_login_at)->not->toBeNull();
 });
 
 it('starts silent session check with prompt none', function () {

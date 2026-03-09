@@ -12,7 +12,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -86,17 +85,6 @@ class UserResource extends Resource
                             ->preload()
                             ->required()
                             ->columnSpanFull(),
-
-                        TextInput::make('google_subject')
-                            ->label('Google Subject')
-                            ->disabled()
-                            ->dehydrated(false),
-
-                        TextInput::make('last_google_login_at')
-                            ->label('Último login Google')
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->formatStateUsing(fn ($state): string => filled($state) ? (string) $state : 'Sin registros'),
                     ]),
             ]);
     }
@@ -120,13 +108,8 @@ class UserResource extends Resource
                     ->badge()
                     ->listWithLineBreaks(),
 
-                IconColumn::make('google_subject')
-                    ->label('Google')
-                    ->boolean()
-                    ->state(fn (User $record): bool => filled($record->google_subject)),
-
-                TextColumn::make('last_google_login_at')
-                    ->label('Último acceso')
+                TextColumn::make('last_sso_login_at')
+                    ->label('Último acceso SSO')
                     ->since()
                     ->sortable(),
             ])

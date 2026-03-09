@@ -136,18 +136,6 @@ Como `auth` utilizará Google obligatorio, `silo` podrá:
 
 ---
 
-## user_app_access (Fase 2)
-
-Permite controlar acceso a apps específicas.
-
-| Campo | Tipo |
-|--------|------|
-| user_id | fk |
-| client_id | string |
-| is_allowed | boolean |
-
----
-
 # 8. Endpoints Requeridos
 
 ## OAuth2
@@ -251,4 +239,3 @@ Una infraestructura centralizada que permita:
 - Seguridad institucional unificada
 - Escalabilidad a nuevas apps sin rediseño
 - Independencia de roles por aplicación
-

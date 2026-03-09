@@ -134,9 +134,7 @@ class SsoController extends Controller
                 'name' => $name === '' ? $email : $name,
                 'auth_subject' => $subject,
                 'institution_code' => $institutionCode !== '' ? $institutionCode : null,
-                'google_subject' => $subject,
                 'google_avatar_url' => $googleAvatarUrl,
-                'last_google_login_at' => now(),
                 'last_sso_login_at' => now(),
                 'password' => $alreadyExists ? null : Hash::make(Str::password(40)),
                 'email_verified_at' => $alreadyExists ? null : now(),
@@ -271,10 +269,6 @@ class SsoController extends Controller
             return $this->logoutForExpiredIdpSession($request);
         }
 
-        if (filled($user->google_subject) && ! hash_equals((string) $user->google_subject, $subject)) {
-            return $this->logoutForExpiredIdpSession($request);
-        }
-
         if (filled($user->auth_subject) && ! hash_equals((string) $user->auth_subject, $subject)) {
             return $this->logoutForExpiredIdpSession($request);
         }
@@ -293,7 +287,6 @@ class SsoController extends Controller
 
         $user->auth_subject = $subject;
         $user->institution_code = $institutionCode !== '' ? $institutionCode : $user->institution_code;
-        $user->last_google_login_at = now();
         $user->last_sso_login_at = now();
         $user->save();
 

@@ -40,11 +40,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'email',
         'auth_subject',
         'institution_code',
-        'google_subject',
         'password',
-        'avatar_url',
         'google_avatar_url',
-        'last_google_login_at',
         'last_sso_login_at',
     ];
 
@@ -68,7 +65,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'last_google_login_at' => 'datetime',
             'last_sso_login_at' => 'datetime',
         ];
     }
