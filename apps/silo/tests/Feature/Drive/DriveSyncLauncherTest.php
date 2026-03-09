@@ -20,8 +20,8 @@ it('launches the external sync in background and stores queued execution metadat
 
     $user = User::factory()->create([
         'name' => 'Admin Sync',
-        'role' => 'administrador',
     ]);
+    $user->assignRole(User::ROLE_SOPORTE);
 
     $result = app(DriveSyncLauncher::class)->launch(true, $user);
 
@@ -61,8 +61,8 @@ it('does not launch a second background process while one is already active', fu
 
     $user = User::factory()->create([
         'name' => 'Admin Sync',
-        'role' => 'administrador',
     ]);
+    $user->assignRole(User::ROLE_SOPORTE);
 
     app(DriveSyncLauncher::class)->launch(false, $user);
     $result = app(DriveSyncLauncher::class)->launch(false, $user);

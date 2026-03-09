@@ -20,6 +20,9 @@ class EditDocumentCategory extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Borrar')
                 ->before(function (DocumentCategory $record): void {
                     DocumentCategoryResource::guardDeletion($record);
                 }),

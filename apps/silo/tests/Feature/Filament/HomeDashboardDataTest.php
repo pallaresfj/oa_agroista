@@ -6,6 +6,9 @@ use App\Models\DocumentCategory;
 use App\Models\Entity;
 use App\Models\User;
 use App\Support\Dashboard\HomeDashboardDataBuilder;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 
@@ -13,8 +16,16 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->seed([
+        RoleSeeder::class,
+        PanelAccessSeeder::class,
+        RolePermissionSeeder::class,
+    ]);
+});
+
 it('builds metrics and top categories for rector users', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
 
     $actas = createCategory('Actas de Examen', 'actas-examen');
@@ -70,7 +81,7 @@ it('builds metrics and top categories for rector users', function () {
 });
 
 it('respects document visibility scope for non rector users', function () {
-    $docente = User::factory()->create(['role' => 'docente']);
+    $docente = createDashboardUserWithRole(User::ROLE_DOCENTE);
     actingAs($docente);
 
     $category = createCategory('General', 'general');
@@ -96,7 +107,7 @@ it('respects document visibility scope for non rector users', function () {
 });
 
 it('limits the review queue to five items and keeps newest first', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
 
     $category = createCategory('Certificados', 'certificados');
@@ -160,7 +171,7 @@ it('limits the review queue to five items and keeps newest first', function () {
 });
 
 it('renders the new dashboard in /admin with queue links', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
     $this->withoutVite();
 
@@ -202,7 +213,7 @@ it('renders the new dashboard in /admin with queue links', function () {
 });
 
 it('hides create document actions in dashboard for lector role', function () {
-    $lector = User::factory()->create(['role' => 'lector']);
+    $lector = createDashboardUserWithRole(User::ROLE_DOCENTE);
     actingAs($lector);
     $this->withoutVite();
 
@@ -220,7 +231,7 @@ it('hides create document actions in dashboard for lector role', function () {
 });
 
 it('applies category filter through documents query string alias', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
     $this->withoutVite();
 
@@ -245,7 +256,7 @@ it('applies category filter through documents query string alias', function () {
 });
 
 it('applies dashboard bucket filter alias for pending approved and archived', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
     $this->withoutVite();
 
@@ -289,7 +300,7 @@ it('applies dashboard bucket filter alias for pending approved and archived', fu
 });
 
 it('applies documents search query string alias', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
     $this->withoutVite();
 
@@ -313,7 +324,7 @@ it('applies documents search query string alias', function () {
 });
 
 it('applies documents search query string alias using metadata tags', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createDashboardUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
     $this->withoutVite();
 
@@ -380,4 +391,12 @@ function createDocument(DocumentCategory $category, array $overrides = [], ?Carb
     }
 
     return $document;
+}
+
+function createDashboardUserWithRole(string $role): User
+{
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    return $user;
 }

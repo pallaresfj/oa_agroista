@@ -7,59 +7,63 @@ use App\Models\User;
 
 class DocumentCategoryPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('categories.view') || $user->hasPermission('categories.manage');
+        return $user->can('view_any_document_category');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, DocumentCategory $documentCategory): bool
     {
-        return $user->hasPermission('categories.view') || $user->hasPermission('categories.manage');
+        return $user->can('view_document_category');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return $user->hasPermission('categories.manage');
+        return $user->can('create_document_category');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, DocumentCategory $documentCategory): bool
     {
-        return $user->hasPermission('categories.manage');
+        return $user->can('update_document_category');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, DocumentCategory $documentCategory): bool
     {
-        return $user->hasPermission('categories.manage');
+        return $user->can('delete_document_category');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_document_category');
+    }
+
     public function restore(User $user, DocumentCategory $documentCategory): bool
     {
-        return $user->hasPermission('categories.manage');
+        return $user->can('restore_document_category');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_document_category');
+    }
+
     public function forceDelete(User $user, DocumentCategory $documentCategory): bool
     {
-        return $user->hasPermission('categories.manage');
+        return $user->can('force_delete_document_category');
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_document_category');
+    }
+
+    public function replicate(User $user, DocumentCategory $documentCategory): bool
+    {
+        return $user->can('replicate_document_category');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_document_category');
     }
 }

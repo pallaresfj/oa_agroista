@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use App\Services\Sso\OidcClient;
+use Agroista\Core\Sso\OidcClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -73,7 +73,6 @@ it('creates or updates local user and authenticates with valid sso callback', fu
 it('starts silent session check with prompt none', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
     ]);
 
     config()->set('sso.session_check_prompt', 'none');
@@ -99,7 +98,6 @@ it('starts silent session check with prompt none', function () {
 it('logs out local session when silent session check returns login_required', function () {
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
     ]);
 
     $response = $this

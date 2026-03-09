@@ -31,7 +31,7 @@ Antes de abrir produccion, confirmar en `.env`:
 - `MAIL_*` (SMTP real)
 - `DRIVE_SYNC_ENABLED=true`
 - `DRIVE_SYNC_NOTIFY=true`
-- `DRIVE_SYNC_NOTIFY_ROLES=administrador,rector`
+- `DRIVE_SYNC_NOTIFY_ROLES=soporte,directivo`
 
 ## Flujo 1: Primer Despliegue
 

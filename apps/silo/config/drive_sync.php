@@ -9,7 +9,7 @@ return [
 
     'notify_roles' => array_values(array_filter(array_map(
         static fn (string $value): string => trim(strtolower($value)),
-        explode(',', (string) env('DRIVE_SYNC_NOTIFY_ROLES', 'administrador,rector'))
+        explode(',', (string) env('DRIVE_SYNC_NOTIFY_ROLES', 'soporte,directivo'))
     ))),
 
     'bootstrap_on_empty_state' => env('DRIVE_SYNC_BOOTSTRAP_ON_EMPTY_STATE', true),

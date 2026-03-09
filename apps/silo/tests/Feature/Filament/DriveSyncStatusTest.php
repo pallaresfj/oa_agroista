@@ -2,16 +2,26 @@
 
 use App\Models\DriveSyncState;
 use App\Models\User;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
-it('shows the external sync progress banner in the documents list', function () {
-    $admin = User::factory()->create([
-        'role' => 'administrador',
+beforeEach(function (): void {
+    $this->seed([
+        RoleSeeder::class,
+        PanelAccessSeeder::class,
+        RolePermissionSeeder::class,
     ]);
+});
+
+it('shows the external sync progress banner in the documents list', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(User::ROLE_SOPORTE);
 
     DriveSyncState::query()->create([
         'key' => 'documents_root',

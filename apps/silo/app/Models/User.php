@@ -2,21 +2,33 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser, HasAvatar
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
+
+    public const ROLE_SUPER_ADMIN = 'super_admin';
+
+    public const ROLE_SOPORTE = 'soporte';
+
+    public const ROLE_DIRECTIVO = 'directivo';
+
+    public const ROLE_DOCENTE = 'docente';
+
+    public const ROLE_ADMINISTRATIVO = 'administrativo';
+
+    public const ROLE_VISITANTE = 'visitante';
+
+    protected string $guard_name = 'web';
 
     /**
      * The attributes that are mass assignable.
@@ -32,7 +44,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'password',
         'avatar_url',
         'google_avatar_url',
-        'role',
         'last_google_login_at',
         'last_sso_login_at',
     ];
@@ -67,11 +78,51 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        if ($this->hasRbacRoleTables() && $this->roles()->exists()) {
+        if ($panel->getId() !== 'admin') {
+            return false;
+        }
+
+        if ($this->hasRole(self::ROLE_SUPER_ADMIN)) {
             return true;
         }
 
-        return filled($this->role);
+        return $this->can('panel_user');
+    }
+
+    /**
+     * Ensure at least one app role is assigned.
+     */
+    public function ensureApplicationRole(string $preferredRole = self::ROLE_DOCENTE): void
+    {
+        if (! Schema::hasTable('roles') || ! Schema::hasTable('model_has_roles') || $this->roles()->exists()) {
+            return;
+        }
+
+        $roleName = match (mb_strtolower(trim($preferredRole))) {
+            self::ROLE_SUPER_ADMIN => self::ROLE_SUPER_ADMIN,
+            self::ROLE_SOPORTE, 'soporte' => self::ROLE_SOPORTE,
+            self::ROLE_DIRECTIVO, 'rector', 'editor' => self::ROLE_DIRECTIVO,
+            self::ROLE_ADMINISTRATIVO, 'administrador' => self::ROLE_ADMINISTRATIVO,
+            self::ROLE_VISITANTE, 'visitante' => self::ROLE_VISITANTE,
+            default => self::ROLE_DOCENTE,
+        };
+
+        $this->assignRole($roleName);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function applicationRoles(): array
+    {
+        return [
+            self::ROLE_SUPER_ADMIN,
+            self::ROLE_SOPORTE,
+            self::ROLE_DIRECTIVO,
+            self::ROLE_DOCENTE,
+            self::ROLE_ADMINISTRATIVO,
+            self::ROLE_VISITANTE,
+        ];
     }
 
     /**
@@ -86,120 +137,5 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         return $googleAvatarUrl;
-    }
-
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class)->withTimestamps();
-    }
-
-    public function hasRole(string $slug): bool
-    {
-        return $this->hasAnyRole([$slug]);
-    }
-
-    /**
-     * @param  array<int, string>  $slugs
-     */
-    public function hasAnyRole(array $slugs): bool
-    {
-        $slugs = array_map(fn (string $slug): string => Str::lower($slug), $slugs);
-
-        if ($this->hasRbacRoleTables() && $this->relationLoaded('roles') && $this->roles->isNotEmpty()) {
-            return $this->roles
-                ->pluck('slug')
-                ->map(fn (string $slug): string => Str::lower($slug))
-                ->intersect($slugs)
-                ->isNotEmpty();
-        }
-
-        if ($this->hasRbacRoleTables() && $this->roles()->exists()) {
-            return $this->roles()
-                ->whereIn('slug', $slugs)
-                ->exists();
-        }
-
-        if (blank($this->role)) {
-            return false;
-        }
-
-        return in_array(Str::lower((string) $this->role), $slugs, true);
-    }
-
-    public function hasPermission(string $code): bool
-    {
-        $code = Str::lower($code);
-
-        if (
-            $this->hasRbacPermissionTables() &&
-            $this->roles()->whereHas('permissions', fn ($query) => $query->where('code', $code))->exists()
-        ) {
-            return true;
-        }
-
-        $legacyRole = Str::lower((string) $this->role);
-        $legacyPermissions = static::legacyRolePermissions()[$legacyRole] ?? [];
-
-        return in_array($code, $legacyPermissions, true);
-    }
-
-    protected function hasRbacRoleTables(): bool
-    {
-        return Schema::hasTable('roles') && Schema::hasTable('role_user');
-    }
-
-    protected function hasRbacPermissionTables(): bool
-    {
-        return $this->hasRbacRoleTables()
-            && Schema::hasTable('permissions')
-            && Schema::hasTable('permission_role');
-    }
-
-    /**
-     * @return array<string, array<int, string>>
-     */
-    public static function legacyRolePermissions(): array
-    {
-        return [
-            'rector' => [
-                'documents.view',
-                'documents.view_all_states',
-                'documents.create',
-                'documents.update',
-                'documents.delete',
-                'categories.view',
-                'categories.manage',
-                'entities.view',
-                'entities.manage',
-                'users.manage',
-                'roles.manage',
-            ],
-            'administrador' => [
-                'documents.view',
-                'documents.view_all_states',
-                'documents.create',
-                'documents.update',
-                'documents.delete',
-                'categories.view',
-                'categories.manage',
-                'entities.view',
-                'entities.manage',
-                'users.manage',
-                'roles.manage',
-            ],
-            'editor' => [
-                'documents.view',
-                'documents.create',
-                'documents.update',
-                'categories.view',
-                'entities.view',
-            ],
-            'docente' => [
-                'documents.view',
-            ],
-            'lector' => [
-                'documents.view',
-            ],
-        ];
     }
 }

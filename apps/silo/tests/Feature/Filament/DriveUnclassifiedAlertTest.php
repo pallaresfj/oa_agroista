@@ -6,6 +6,9 @@ use App\Models\User;
 use App\Notifications\DriveUnclassifiedDetected;
 use App\Support\Drive\Contracts\DriveSyncGateway;
 use App\Support\Drive\DriveUnclassifiedSyncService;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\Fixtures\FakeDriveSyncGateway;
@@ -14,19 +17,34 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
-it('sends email notifications to admin roles when new unclassified files are imported', function () {
+beforeEach(function (): void {
+    $this->seed([
+        RoleSeeder::class,
+        PanelAccessSeeder::class,
+        RolePermissionSeeder::class,
+    ]);
+
+    config()->set('filesystems.disks.google.folder', 'root-folder');
+});
+
+it('supports legacy notify_roles values by resolving canonical role recipients', function () {
     config()->set('drive_sync.notify', true);
     config()->set('drive_sync.notify_roles', ['administrador', 'rector']);
 
-    $rector = User::factory()->create([
-        'role' => 'rector',
+    $administrativo = User::factory()->create([
+        'email' => 'administrativo@example.com',
+    ]);
+    $administrativo->assignRole(User::ROLE_ADMINISTRATIVO);
+
+    $directivo = User::factory()->create([
         'email' => 'rector@example.com',
     ]);
+    $directivo->assignRole(User::ROLE_DIRECTIVO);
 
-    $editor = User::factory()->create([
-        'role' => 'editor',
+    $docente = User::factory()->create([
         'email' => 'editor@example.com',
     ]);
+    $docente->assignRole(User::ROLE_DOCENTE);
 
     Notification::fake();
 
@@ -48,8 +66,9 @@ it('sends email notifications to admin roles when new unclassified files are imp
 
     app(DriveUnclassifiedSyncService::class)->sync(true);
 
-    Notification::assertSentTo($rector, DriveUnclassifiedDetected::class);
-    Notification::assertNotSentTo($editor, DriveUnclassifiedDetected::class);
+    Notification::assertSentTo($administrativo, DriveUnclassifiedDetected::class);
+    Notification::assertSentTo($directivo, DriveUnclassifiedDetected::class);
+    Notification::assertNotSentTo($docente, DriveUnclassifiedDetected::class);
 });
 
 it('does not send notifications when there are no unclassified imports', function () {
@@ -57,9 +76,9 @@ it('does not send notifications when there are no unclassified imports', functio
     config()->set('drive_sync.notify_roles', ['administrador', 'rector']);
 
     $rector = User::factory()->create([
-        'role' => 'rector',
         'email' => 'rector@example.com',
     ]);
+    $rector->assignRole(User::ROLE_DIRECTIVO);
 
     Notification::fake();
 
@@ -75,7 +94,8 @@ it('does not send notifications when there are no unclassified imports', functio
 });
 
 it('shows the unclassified alert banner in dashboard', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = User::factory()->create();
+    $rector->assignRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
     $this->withoutVite();
 

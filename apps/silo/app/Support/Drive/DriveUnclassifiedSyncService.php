@@ -367,9 +367,11 @@ class DriveUnclassifiedSyncService
      */
     protected function notifyUnclassifiedDetected(array $summary): int
     {
-        $roles = collect(config('drive_sync.notify_roles', ['administrador', 'rector']))
+        $roles = collect(config('drive_sync.notify_roles', ['soporte', 'directivo']))
             ->map(static fn (mixed $role): string => strtolower(trim((string) $role)))
+            ->map(fn (string $role): string => $this->normalizeRoleAlias($role))
             ->filter()
+            ->unique()
             ->values()
             ->all();
 
@@ -401,15 +403,23 @@ class DriveUnclassifiedSyncService
     {
         return User::query()
             ->get()
-            ->filter(static function (User $user) use ($roles): bool {
-                $legacyRole = strtolower(trim((string) $user->role));
-
-                return in_array($legacyRole, $roles, true)
-                    || $user->hasAnyRole($roles);
-            })
+            ->filter(static fn (User $user): bool => $user->hasAnyRole($roles))
             ->filter(static fn (User $user): bool => filled($user->email))
             ->unique(static fn (User $user): string => strtolower((string) $user->email))
             ->values();
+    }
+
+    protected function normalizeRoleAlias(string $role): string
+    {
+        return match ($role) {
+            'rector', 'editor', User::ROLE_DIRECTIVO => User::ROLE_DIRECTIVO,
+            User::ROLE_SOPORTE => User::ROLE_SOPORTE,
+            'administrador', User::ROLE_ADMINISTRATIVO => User::ROLE_ADMINISTRATIVO,
+            'lector', 'docente', User::ROLE_DOCENTE => User::ROLE_DOCENTE,
+            User::ROLE_VISITANTE => User::ROLE_VISITANTE,
+            User::ROLE_SUPER_ADMIN => User::ROLE_SUPER_ADMIN,
+            default => $role,
+        };
     }
 
     protected function buildUnclassifiedFilterUrl(): string

@@ -19,6 +19,9 @@ class EditEntity extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Borrar')
                 ->before(function (Entity $record): void {
                     EntityResource::guardDeletion($record);
                 }),

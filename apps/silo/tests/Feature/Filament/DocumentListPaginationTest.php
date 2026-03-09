@@ -4,6 +4,9 @@ use App\Filament\Resources\DocumentResource\Pages\ListDocuments;
 use App\Models\Document;
 use App\Models\DocumentCategory;
 use App\Models\User;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -11,8 +14,16 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->seed([
+        RoleSeeder::class,
+        PanelAccessSeeder::class,
+        RolePermissionSeeder::class,
+    ]);
+});
+
 it('renders the document list with the expected pagination selector options', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createPaginationUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
 
     $this->get('/admin/documents')->assertOk();
@@ -33,7 +44,7 @@ it('renders the document list with the expected pagination selector options', fu
 });
 
 it('responds successfully on the documents index route', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createPaginationUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
 
     $response = $this->get('/admin/documents');
@@ -42,7 +53,7 @@ it('responds successfully on the documents index route', function () {
 });
 
 it('defaults the document list pagination to ten records per page', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createPaginationUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
 
     $category = createPaginationCategory();
@@ -81,4 +92,12 @@ function createPaginationDocument(DocumentCategory $category, int $index): Docum
         'status' => 'Publicado',
         'metadata' => null,
     ]);
+}
+
+function createPaginationUserWithRole(string $role): User
+{
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    return $user;
 }

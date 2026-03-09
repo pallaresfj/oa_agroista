@@ -278,6 +278,6 @@ class HomeDashboardDataBuilder
             return false;
         }
 
-        return $user->hasPermission('documents.create');
+        return $user->can('create_document');
     }
 }

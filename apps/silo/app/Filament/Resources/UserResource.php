@@ -74,7 +74,13 @@ class UserResource extends Resource
 
                         Select::make('roles')
                             ->label('Roles')
-                            ->relationship('roles', 'name')
+                            ->relationship(
+                                'roles',
+                                'name',
+                                modifyQueryUsing: fn ($query) => $query
+                                    ->whereIn('name', User::applicationRoles())
+                                    ->orderBy('name')
+                            )
                             ->multiple()
                             ->searchable()
                             ->preload()

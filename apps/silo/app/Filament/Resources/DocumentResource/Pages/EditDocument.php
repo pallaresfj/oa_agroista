@@ -25,8 +25,14 @@ class EditDocument extends EditRecord
     {
         return [
             Actions\DeleteAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Archivar')
                 ->label('Archivar'),
             Actions\ForceDeleteAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Eliminar definitivamente')
                 ->label('Eliminar definitivamente')
                 ->modalHeading('Eliminar documento definitivamente')
                 ->modalDescription('Esta acción eliminará el registro y el archivo en Google Drive. No se puede deshacer.')
@@ -55,7 +61,10 @@ class EditDocument extends EditRecord
 
                     $action->success();
                 }),
-            Actions\RestoreAction::make(),
+            Actions\RestoreAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Restaurar'),
         ];
     }
 

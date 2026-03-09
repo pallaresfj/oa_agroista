@@ -3,15 +3,18 @@
 namespace App\Providers;
 
 use App\Filament\Auth\Responses\LogoutResponse as AppLogoutResponse;
-use App\Support\GoogleWorkspace\Contracts\WorkspaceUserDirectory;
-use App\Support\GoogleWorkspace\GoogleWorkspaceUserDirectory;
 use App\Support\Drive\Contracts\DriveSyncGateway;
 use App\Support\Drive\GoogleDriveSyncGateway;
+use App\Support\GoogleWorkspace\Contracts\WorkspaceUserDirectory;
+use App\Support\GoogleWorkspace\GoogleWorkspaceUserDirectory;
 use Filament\Auth\Http\Responses\Contracts\LogoutResponse as LogoutResponseContract;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\ServiceProvider;
 use League\Flysystem\Filesystem;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,6 +33,30 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Role::created(function (Role $role): void {
+            if (! (bool) config('filament-shield.panel_user.enabled', true)) {
+                return;
+            }
+
+            $permissionName = trim((string) config('filament-shield.panel_user.name', 'panel_user'));
+
+            if ($permissionName === '') {
+                $permissionName = 'panel_user';
+            }
+
+            $guardName = trim((string) ($role->guard_name ?: config('auth.defaults.guard', 'web')));
+
+            $permission = Permission::query()->firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => $guardName !== '' ? $guardName : 'web',
+            ]);
+
+            if (! $role->hasPermissionTo($permission)) {
+                $role->givePermissionTo($permission);
+                app(PermissionRegistrar::class)->forgetCachedPermissions();
+            }
+        });
+
         $this->registerGoogleDriveDriver();
     }
 
@@ -46,7 +73,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Storage::extend('google', function ($app, $config) {
             // Check if the masbug adapter is installed
-            if (!class_exists(\Masbug\Flysystem\GoogleDriveAdapter::class)) {
+            if (! class_exists(\Masbug\Flysystem\GoogleDriveAdapter::class)) {
                 \Illuminate\Support\Facades\Log::warning(
                     'Google Drive adapter not installed. Run: composer require masbug/flysystem-google-drive-ext'
                 );

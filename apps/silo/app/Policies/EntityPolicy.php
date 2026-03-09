@@ -7,59 +7,63 @@ use App\Models\User;
 
 class EntityPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('entities.view') || $user->hasPermission('entities.manage');
+        return $user->can('view_any_entity');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Entity $entity): bool
     {
-        return $user->hasPermission('entities.view') || $user->hasPermission('entities.manage');
+        return $user->can('view_entity');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return $user->hasPermission('entities.manage');
+        return $user->can('create_entity');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Entity $entity): bool
     {
-        return $user->hasPermission('entities.manage');
+        return $user->can('update_entity');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Entity $entity): bool
     {
-        return $user->hasPermission('entities.manage');
+        return $user->can('delete_entity');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_entity');
+    }
+
     public function restore(User $user, Entity $entity): bool
     {
-        return $user->hasPermission('entities.manage');
+        return $user->can('restore_entity');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_entity');
+    }
+
     public function forceDelete(User $user, Entity $entity): bool
     {
-        return $user->hasPermission('entities.manage');
+        return $user->can('force_delete_entity');
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_entity');
+    }
+
+    public function replicate(User $user, Entity $entity): bool
+    {
+        return $user->can('replicate_entity');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_entity');
     }
 }

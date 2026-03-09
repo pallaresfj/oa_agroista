@@ -13,8 +13,10 @@ class ListEntities extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Crear entidad'),
         ];
     }
 }
-

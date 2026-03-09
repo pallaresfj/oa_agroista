@@ -30,10 +30,16 @@ class ListDocuments extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Crear documento'),
             Actions\Action::make('driveSyncStatus')
                 ->label(fn (): string => $this->getDriveSyncStatusLabel())
                 ->icon(fn (): string => $this->getDriveSyncStatusIcon())
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip(fn (): string => $this->getDriveSyncStatusLabel())
                 ->color(fn (): string => $this->getDriveSyncStatusColor())
                 ->modalHeading('Estado de sincronización de externos')
                 ->modalDescription(fn (): string => $this->getDriveSyncStatusBody())
@@ -137,7 +143,9 @@ class ListDocuments extends ListRecords
             ])
                 ->label('Herramientas Drive')
                 ->icon('heroicon-o-cloud')
-                ->button()
+                ->iconButton()
+                ->hiddenLabel()
+                ->tooltip('Herramientas Drive')
                 ->visible(fn (): bool => $this->canUseDriveTools()),
         ];
     }
@@ -150,7 +158,7 @@ class ListDocuments extends ListRecords
             return false;
         }
 
-        return $user->hasAnyRole(['rector', 'administrador']);
+        return $user->can('manage_drive_tools');
     }
 
     public function table(Table $table): Table

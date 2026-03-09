@@ -18,6 +18,8 @@ Route::middleware('guest')->group(function (): void {
 Route::get('/sso/callback', [SsoController::class, 'callback'])->name('sso.callback');
 
 Route::middleware('auth')->group(function (): void {
+    Route::redirect('/admin/roles', '/admin/shield/roles');
+
     Route::get('/sso/session-check/start', [SsoController::class, 'startSessionCheck'])->name('sso.session-check.start');
     Route::get('/sso/session-check/callback', [SsoController::class, 'completeSessionCheck'])->name('sso.session-check.callback');
 });

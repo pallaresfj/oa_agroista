@@ -139,6 +139,6 @@ class GoogleAuthController extends Controller
 
     protected function hasAccessRole(User $user): bool
     {
-        return $user->roles()->exists() || filled($user->role);
+        return $user->hasAnyRole(User::applicationRoles());
     }
 }

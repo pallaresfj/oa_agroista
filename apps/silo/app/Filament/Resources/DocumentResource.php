@@ -509,7 +509,7 @@ class DocumentResource extends Resource
                         ->modalSubmitActionLabel('Aplicar cambios')
                         ->fetchSelectedRecords()
                         ->deselectRecordsAfterCompletion()
-                        ->visible(fn (): bool => auth()->user()?->hasPermission('documents.update') ?? false)
+                        ->visible(fn (): bool => auth()->user()?->can('update_document') ?? false)
                         ->authorizeIndividualRecords('update')
                         ->form([
                             Select::make('status')

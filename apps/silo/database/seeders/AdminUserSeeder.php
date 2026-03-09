@@ -2,30 +2,42 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AdminUserSeeder extends Seeder
 {
     /**
-     * Seed the default administrator (Rector) user.
+     * Seed default soporte/directivo users.
      */
     public function run(): void
     {
-        $user = User::firstOrCreate(
-            ['email' => 'rectoria@iedagropivijay.edu.co'],
+        $users = [
             [
-                'name' => 'Francisco Pallares De la Hoz',
-                'password' => null,
-                'role' => 'rector',
-            ]
-        );
+                'name' => 'Soporte',
+                'email' => 'pallaresfj@iedagropivijay.edu.co',
+                'role' => User::ROLE_SOPORTE,
+            ],
+            [
+                'name' => 'Directivo',
+                'email' => 'rectoria@iedagropivijay.edu.co',
+                'role' => User::ROLE_DIRECTIVO,
+            ],
+        ];
 
-        $role = Role::query()->where('slug', 'rector')->first();
+        foreach ($users as $seedUser) {
+            $user = User::query()->updateOrCreate(
+                ['email' => $seedUser['email']],
+                [
+                    'name' => $seedUser['name'],
+                    'email_verified_at' => now(),
+                    'password' => Hash::make(Str::password(40)),
+                ]
+            );
 
-        if ($role) {
-            $user->roles()->syncWithoutDetaching([$role->id]);
+            $user->syncRoles([$seedUser['role']]);
         }
     }
 }

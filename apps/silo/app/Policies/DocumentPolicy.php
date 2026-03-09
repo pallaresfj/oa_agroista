@@ -7,59 +7,63 @@ use App\Models\User;
 
 class DocumentPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
-        return $user->hasPermission('documents.view');
+        return $user->can('view_any_document');
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Document $document): bool
     {
-        return $user->hasPermission('documents.view');
+        return $user->can('view_document');
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        return $user->hasPermission('documents.create');
+        return $user->can('create_document');
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Document $document): bool
     {
-        return $user->hasPermission('documents.update');
+        return $user->can('update_document');
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Document $document): bool
     {
-        return $user->hasPermission('documents.delete');
+        return $user->can('delete_document');
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_document');
+    }
+
     public function restore(User $user, Document $document): bool
     {
-        return $user->hasPermission('documents.delete');
+        return $user->can('restore_document');
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
+    public function restoreAny(User $user): bool
+    {
+        return $user->can('restore_any_document');
+    }
+
     public function forceDelete(User $user, Document $document): bool
     {
-        return $user->hasPermission('documents.delete');
+        return $user->can('force_delete_document');
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_document');
+    }
+
+    public function replicate(User $user, Document $document): bool
+    {
+        return $user->can('replicate_document');
+    }
+
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_document');
     }
 }

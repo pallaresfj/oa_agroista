@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use App\Models\Role;
 use App\Support\GoogleWorkspace\Contracts\WorkspaceUserDirectory;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Validation\ValidationException;
@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
+
     protected bool $workspaceValidationEnabled = false;
 
     protected function mutateFormDataBeforeCreate(array $data): array
@@ -23,24 +24,21 @@ class CreateUser extends CreateRecord
         }
 
         $data['password'] = null;
-        $data['role'] = $this->resolveLegacyRoleFromSelection($data['roles'] ?? []);
 
         return $data;
-    }
-
-    protected function afterCreate(): void
-    {
-        $legacyRole = $this->record->roles()->value('slug');
-
-        if (filled($legacyRole)) {
-            $this->record->role = $legacyRole;
-            $this->record->saveQuietly();
-        }
     }
 
     protected function getRedirectUrl(): string
     {
         return static::getResource()::getUrl('index');
+    }
+
+    protected function getCancelFormAction(): Action
+    {
+        return Action::make('cancel')
+            ->label(__('filament-panels::resources/pages/create-record.form.actions.cancel.label'))
+            ->url(static::getResource()::getUrl('index'))
+            ->color('gray');
     }
 
     protected function getCreatedNotification(): ?Notification
@@ -56,23 +54,6 @@ class CreateUser extends CreateRecord
         }
 
         return $notification;
-    }
-
-    /**
-     * @param  array<int, int|string>  $selectedRoleIds
-     */
-    protected function resolveLegacyRoleFromSelection(array $selectedRoleIds): string
-    {
-        if (empty($selectedRoleIds)) {
-            return 'docente';
-        }
-
-        $slug = Role::query()
-            ->whereIn('id', $selectedRoleIds)
-            ->orderByRaw('FIELD(slug, "rector", "administrador", "editor", "lector")')
-            ->value('slug');
-
-        return filled($slug) ? (string) $slug : 'docente';
     }
 
     protected function assertUserExistsInWorkspace(string $email): void

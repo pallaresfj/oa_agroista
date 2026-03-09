@@ -143,6 +143,9 @@ class SsoController extends Controller
             ], static fn (mixed $value): bool => $value !== null),
         );
 
+        $preferredRole = $this->resolvePreferredRole((string) ($claims['role'] ?? User::ROLE_DOCENTE));
+        $user->ensureApplicationRole($preferredRole);
+
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
         $request->session()->put(self::SESSION_CHECK_LAST_AT, now()->timestamp);
@@ -434,6 +437,18 @@ class SsoController extends Controller
         }
 
         return $next;
+    }
+
+    private function resolvePreferredRole(string $rawRole): string
+    {
+        return match (mb_strtolower(trim($rawRole))) {
+            User::ROLE_SUPER_ADMIN => User::ROLE_SUPER_ADMIN,
+            User::ROLE_SOPORTE, 'soporte' => User::ROLE_SOPORTE,
+            User::ROLE_DIRECTIVO, 'rector', 'editor' => User::ROLE_DIRECTIVO,
+            User::ROLE_ADMINISTRATIVO, 'administrador' => User::ROLE_ADMINISTRATIVO,
+            User::ROLE_VISITANTE, 'visitante' => User::ROLE_VISITANTE,
+            default => User::ROLE_DOCENTE,
+        };
     }
 
     private function base64UrlEncode(string $value): string

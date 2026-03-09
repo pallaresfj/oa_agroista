@@ -5,6 +5,9 @@ use App\Models\Document;
 use App\Models\DocumentCategory;
 use App\Models\Entity;
 use App\Models\User;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -12,8 +15,16 @@ use function Pest\Laravel\actingAs;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function (): void {
+    $this->seed([
+        RoleSeeder::class,
+        PanelAccessSeeder::class,
+        RolePermissionSeeder::class,
+    ]);
+});
+
 it('shows the bulk update action to users who can update documents', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     actingAs($rector);
 
     Livewire::test(ListDocuments::class)
@@ -24,7 +35,7 @@ it('shows the bulk update action to users who can update documents', function ()
 });
 
 it('hides the bulk update action from users without document update permission', function () {
-    $lector = User::factory()->create(['role' => 'lector']);
+    $lector = createBulkUserWithRole(User::ROLE_DOCENTE);
     actingAs($lector);
 
     Livewire::test(ListDocuments::class)
@@ -33,7 +44,7 @@ it('hides the bulk update action from users without document update permission',
 });
 
 it('updates only the status for the selected active documents', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Actas', 'actas');
     $entity = createBulkEntity('Secretaría');
 
@@ -68,7 +79,7 @@ it('updates only the status for the selected active documents', function () {
 });
 
 it('updates only the category for the selected documents', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $currentCategory = createBulkCategory('Circulares', 'circulares');
     $newCategory = createBulkCategory('Resoluciones', 'resoluciones');
 
@@ -92,7 +103,7 @@ it('updates only the category for the selected documents', function () {
 });
 
 it('assigns an entity to the selected documents', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Constancias', 'constancias');
     $entity = createBulkEntity('Consejo Académico');
     $first = createBulkDocument($category);
@@ -113,7 +124,7 @@ it('assigns an entity to the selected documents', function () {
 });
 
 it('clears the entity from the selected documents', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Memorandos', 'memorandos');
     $entity = createBulkEntity('Rectoría');
     $first = createBulkDocument($category, ['entity_id' => $entity->id]);
@@ -133,7 +144,7 @@ it('clears the entity from the selected documents', function () {
 });
 
 it('updates status category and entity together in one bulk action', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $oldCategory = createBulkCategory('General', 'general');
     $newCategory = createBulkCategory('Contratos', 'contratos');
     $entity = createBulkEntity('Secretaría Académica');
@@ -161,7 +172,7 @@ it('updates status category and entity together in one bulk action', function ()
 });
 
 it('does not change documents when the bulk action form is left without changes', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Manuales', 'manuales');
     $entity = createBulkEntity('Tesorería');
     $document = createBulkDocument($category, [
@@ -185,7 +196,7 @@ it('does not change documents when the bulk action form is left without changes'
 });
 
 it('marks documents as archived without sending them to the trash', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Actos', 'actos');
     $document = createBulkDocument($category, ['status' => 'Borrador']);
 
@@ -204,7 +215,7 @@ it('marks documents as archived without sending them to the trash', function () 
 });
 
 it('updates only active documents when the selection includes trashed ones', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Informes', 'informes');
     $active = createBulkDocument($category, ['status' => 'Borrador']);
     $trashed = createBulkDocument($category, ['status' => 'Borrador']);
@@ -227,7 +238,7 @@ it('updates only active documents when the selection includes trashed ones', fun
 });
 
 it('does not update documents when only trashed records are selected', function () {
-    $rector = User::factory()->create(['role' => 'rector']);
+    $rector = createBulkUserWithRole(User::ROLE_DIRECTIVO);
     $category = createBulkCategory('Históricos', 'historicos');
     $trashed = createBulkDocument($category, ['status' => 'Pendiente_OCR']);
     $trashed->delete();
@@ -287,4 +298,12 @@ function refreshDocument(Document $document): Document
 function refreshTrashedDocument(Document $document): Document
 {
     return Document::withoutGlobalScopes()->withTrashed()->findOrFail($document->getKey());
+}
+
+function createBulkUserWithRole(string $role): User
+{
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    return $user;
 }

@@ -13,7 +13,6 @@ it('logs out local session on valid frontchannel request', function () {
 
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
     ]);
 
     $next = 'http://localhost:9000/?logged_out=1';
@@ -41,7 +40,6 @@ it('keeps local session on invalid frontchannel signature', function () {
 
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
     ]);
 
     $next = 'http://localhost:9000/?logged_out=1';
@@ -68,7 +66,6 @@ it('keeps local session when frontchannel timestamp is expired', function () {
 
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
     ]);
 
     $next = 'http://localhost:9000/?logged_out=1';
@@ -96,7 +93,6 @@ it('uses safe fallback when next host is not allowed', function () {
 
     $user = User::factory()->create([
         'email' => 'docente@iedagropivijay.edu.co',
-        'role' => 'docente',
     ]);
 
     $next = 'https://evil.example/logout';
