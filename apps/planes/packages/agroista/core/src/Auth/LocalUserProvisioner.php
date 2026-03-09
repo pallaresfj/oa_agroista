@@ -23,6 +23,7 @@ class LocalUserProvisioner
         $subject = trim((string) ($claims['sub'] ?? ''));
         $name = trim((string) ($claims['name'] ?? $email));
         $institutionCode = trim((string) ($claims['institution_code'] ?? config('agroista-core.institution.default_code', 'default')));
+        $supportsInstitutionCode = $this->supportsColumn($userModel, 'institution_code');
         $avatar = trim((string) ($claims['picture'] ?? $claims['avatar'] ?? $claims['google_avatar_url'] ?? ''));
         $avatarUrl = filter_var($avatar, FILTER_VALIDATE_URL) ? $avatar : null;
 
@@ -41,7 +42,7 @@ class LocalUserProvisioner
         $payload = array_filter([
             'name' => $name === '' ? $email : $name,
             'auth_subject' => $subject !== '' ? $subject : null,
-            'institution_code' => $institutionCode !== '' ? $institutionCode : null,
+            'institution_code' => $supportsInstitutionCode && $institutionCode !== '' ? $institutionCode : null,
             'google_avatar_url' => $avatarUrl,
             'last_sso_login_at' => now(),
             'password' => $existing ? null : Hash::make(Str::password(40)),
