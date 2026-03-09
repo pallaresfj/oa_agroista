@@ -9,6 +9,8 @@ class SuperAdminsSeeder extends Seeder
 {
     public function run(): void
     {
+        $supportName = 'Soporte Técnico';
+
         $emails = array_values(array_filter(array_map(
             static fn (string $item): string => mb_strtolower(trim($item)),
             explode(',', (string) env('SUPERADMIN_EMAILS', '')),
@@ -18,7 +20,7 @@ class SuperAdminsSeeder extends Seeder
             User::query()->updateOrCreate(
                 ['email' => $email],
                 [
-                    'name' => str($email)->before('@')->replace(['.', '_', '-'], ' ')->title()->toString(),
+                    'name' => $supportName,
                     'role' => 'superadmin',
                     'is_active' => true,
                 ],

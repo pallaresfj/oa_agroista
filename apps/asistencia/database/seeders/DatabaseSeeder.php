@@ -24,14 +24,9 @@ class DatabaseSeeder extends Seeder
 
         $users = [
             [
-                'name' => 'Soporte',
+                'name' => 'Soporte Técnico',
                 'email' => 'pallaresfj@iedagropivijay.edu.co',
                 'role' => User::ROLE_SOPORTE,
-            ],
-            [
-                'name' => 'Directivo',
-                'email' => 'rectoria@iedagropivijay.edu.co',
-                'role' => User::ROLE_DIRECTIVO,
             ],
         ];
 

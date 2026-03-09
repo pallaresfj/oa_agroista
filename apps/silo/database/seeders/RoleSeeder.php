@@ -13,6 +13,11 @@ class RoleSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
+        Role::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', ['lector', 'Lector'])
+            ->delete();
+
         foreach (User::applicationRoles() as $role) {
             Role::query()->firstOrCreate([
                 'name' => $role,
