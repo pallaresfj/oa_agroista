@@ -93,6 +93,7 @@ Variables obligatorias comunes:
 
 - `APP_KEY`
 - `APP_URL`
+- `SUPERADMIN_EMAILS` (lista CSV de correos con acceso al panel `admin`)
 - `DB_HOST=mysql-shared`
 - `DB_PORT=3306`
 - `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` segun app
@@ -122,6 +123,7 @@ Desplegar en este orden:
 
 ```bash
 php artisan migrate --force
+php artisan db:seed --class=SuperAdminsSeeder --force
 php artisan passport:keys --force
 php artisan optimize:clear
 php artisan config:cache
