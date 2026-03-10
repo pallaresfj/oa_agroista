@@ -11,6 +11,8 @@ RUN composer install \
     --no-progress \
     --prefer-dist \
     --optimize-autoloader \
+    --ignore-platform-req=ext-bcmath \
+    --ignore-platform-req=ext-intl \
     --no-scripts
 
 
