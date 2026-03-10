@@ -11,6 +11,7 @@ return [
     'issuer' => env('SSO_ISSUER', 'http://localhost:8000'),
     'client_id' => env('SSO_CLIENT_ID', ''),
     'client_secret' => env('SSO_CLIENT_SECRET', ''),
+    'support_emails' => $csv(env('SSO_SUPPORT_EMAILS', '')),
     'institution_code' => mb_strtolower(trim((string) env('INSTITUTION_CODE', 'default'))),
     'redirect_uri' => env('SSO_REDIRECT_URI', rtrim((string) env('APP_URL', 'http://localhost'), '/').'/sso/callback'),
     'scopes' => array_values(array_filter($scopes, static fn (string $scope): bool => $scope !== '')),

@@ -68,6 +68,11 @@ x-laravel-env: &laravel-env
   SSO_HTTP_TIMEOUT: ${SSO_HTTP_TIMEOUT}
   AUTH_API_BASE: ${AUTH_API_BASE}
 
+  # Startup bootstrap for permissions/roles in the web container.
+  PLANES_BOOTSTRAP_ON_START: ${PLANES_BOOTSTRAP_ON_START:-true}
+  PLANES_BOOTSTRAP_MAX_TRIES: ${PLANES_BOOTSTRAP_MAX_TRIES:-20}
+  PLANES_BOOTSTRAP_SLEEP_SECONDS: ${PLANES_BOOTSTRAP_SLEEP_SECONDS:-3}
+
 services:
   web:
     build:

@@ -33,18 +33,27 @@ Variables minimas:
 - `SSO_ISSUER=https://auth.<dominio>`
 - `SSO_DISCOVERY_URL=https://auth.<dominio>/.well-known/openid-configuration`
 - `AUTH_API_BASE=https://auth.<dominio>/api/ecosystem`
+- `SSO_SUPPORT_EMAILS=soporte@<dominio>` (o una lista separada por comas)
+- `PLANES_BOOTSTRAP_ON_START=true`
 
-## Primer despliegue (one-time)
+## Bootstrap automatico al arrancar
 
-Ejecutar en servicio `web`:
+Con `PLANES_BOOTSTRAP_ON_START=true`, el contenedor `web` ejecuta automaticamente:
+
+- `php artisan migrate --force` (con reintentos)
+- `php artisan shield:generate --all --panel=admin --option=permissions --no-interaction`
+- `php artisan db:seed --class=Database\\Seeders\\RolePermissionSafeSeeder --force`
+
+Esto evita comandos manuales para dejar permisos listos en cada deploy.
+
+## Fallback manual (solo si necesitas depurar)
+
+Ejecutar en `web`:
 
 ```bash
 php artisan migrate --force
-php artisan filament:assets
-php artisan optimize:clear
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan shield:generate --all --panel=admin --option=permissions --no-interaction
+php artisan db:seed --class=Database\\Seeders\\RolePermissionSafeSeeder --force
 ```
 
 ## Verificacion rapida

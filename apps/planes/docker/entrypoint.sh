@@ -14,4 +14,30 @@ if [ ! -L /var/www/html/public/storage ]; then
   php /var/www/html/artisan storage:link || true
 fi
 
+if [ "${1:-}" = "apache2-foreground" ] && [ "${PLANES_BOOTSTRAP_ON_START:-true}" = "true" ]; then
+  echo "[planes] Running startup bootstrap (migrations + permissions)..."
+
+  tries=0
+  max_tries="${PLANES_BOOTSTRAP_MAX_TRIES:-20}"
+  sleep_seconds="${PLANES_BOOTSTRAP_SLEEP_SECONDS:-3}"
+
+  until php /var/www/html/artisan migrate --force; do
+    tries=$((tries + 1))
+    if [ "$tries" -ge "$max_tries" ]; then
+      echo "[planes] migrate failed after ${max_tries} attempts."
+      exit 1
+    fi
+    echo "[planes] migrate failed (attempt ${tries}/${max_tries}); retrying in ${sleep_seconds}s..."
+    sleep "$sleep_seconds"
+  done
+
+  if php /var/www/html/artisan list --raw | grep -q "^shield:generate$"; then
+    php /var/www/html/artisan shield:generate --all --panel=admin --option=permissions --no-interaction
+  else
+    echo "[planes] shield:generate command not found, skipping permission generation."
+  fi
+
+  php /var/www/html/artisan db:seed --class=Database\\Seeders\\RolePermissionSafeSeeder --force
+fi
+
 exec "$@"

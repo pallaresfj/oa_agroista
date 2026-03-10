@@ -3,6 +3,7 @@
 use App\Models\User;
 use Agroista\Core\Sso\OidcClient;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -73,6 +74,65 @@ it('creates user, assigns docente role and authenticates with valid sso callback
     expect($user)->not->toBeNull();
     expect($user?->hasRole('Docente'))->toBeTrue();
     expect($user?->google_avatar_url)->toBe('https://avatars.example.com/docente.jpg');
+});
+
+it('assigns soporte role and syncs permissions for configured support emails', function () {
+    config()->set('sso.support_emails', ['pallaresfj@iedagropivijay.edu.co']);
+
+    Permission::query()->create([
+        'name' => 'manage_all_records',
+        'guard_name' => 'web',
+    ]);
+
+    Role::query()->create([
+        'name' => 'Docente',
+        'guard_name' => 'web',
+    ]);
+
+    $mock = Mockery::mock(OidcClient::class);
+    $this->app->instance(OidcClient::class, $mock);
+
+    $mock->shouldReceive('exchangeCodeForTokens')
+        ->once()
+        ->with('auth-code', 'verifier-123')
+        ->andReturn([
+            'id_token' => 'id-token',
+            'access_token' => 'access-token',
+        ]);
+
+    $mock->shouldReceive('validateIdToken')
+        ->once()
+        ->with('id-token')
+        ->andReturn([
+            'nonce' => 'nonce-123',
+        ]);
+
+    $mock->shouldReceive('resolveClaims')
+        ->once()
+        ->andReturn([
+            'sub' => 'subject-support',
+            'email' => 'PALLARESFJ@iedagropivijay.edu.co',
+            'name' => 'Soporte SSO',
+            'is_active' => true,
+        ]);
+
+    $response = $this
+        ->withSession([
+            'sso.state' => 'expected-state',
+            'sso.nonce' => 'nonce-123',
+            'sso.code_verifier' => 'verifier-123',
+        ])
+        ->get('/sso/callback?code=auth-code&state=expected-state');
+
+    $response->assertRedirect('/admin');
+    $this->assertAuthenticated();
+
+    $user = User::query()->where('email', 'pallaresfj@iedagropivijay.edu.co')->first();
+    expect($user)->not->toBeNull();
+    expect($user?->hasRole('Soporte'))->toBeTrue();
+    expect($user?->hasRole('Docente'))->toBeFalse();
+    expect($user?->can('manage_all_records'))->toBeTrue();
+    expect($user?->can('panel_user'))->toBeTrue();
 });
 
 it('starts silent idp session check for authenticated users', function () {

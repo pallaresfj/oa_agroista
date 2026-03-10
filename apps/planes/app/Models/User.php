@@ -23,6 +23,20 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public const ROLE_AREA = 5;
     public const ROLE_DOCENTE = 6;
 
+    /**
+     * Legacy numeric role constants mapped to canonical role names.
+     *
+     * @var array<int, string>
+     */
+    private const ROLE_ID_TO_NAME = [
+        self::ROLE_SUPERADMIN => 'super_admin',
+        self::ROLE_SOPORTE => 'Soporte',
+        self::ROLE_DIRECTIVO => 'Directivo',
+        self::ROLE_CENTRO => 'Centro',
+        self::ROLE_AREA => 'Area',
+        self::ROLE_DOCENTE => 'Docente',
+    ];
+
 
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasRoles;
@@ -101,7 +115,26 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function hasAnyRoleId(array $ids): bool
     {
-        return $this->roles->whereIn('id', $ids)->isNotEmpty();
+        $normalizedIds = collect($ids)
+            ->map(static fn (mixed $value): int => (int) $value)
+            ->filter(static fn (int $value): bool => $value > 0)
+            ->values();
+
+        if ($normalizedIds->isEmpty()) {
+            return false;
+        }
+
+        $roleNames = $normalizedIds
+            ->map(static fn (int $id): ?string => self::ROLE_ID_TO_NAME[$id] ?? null)
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($roleNames !== []) {
+            return $this->hasAnyRole($roleNames);
+        }
+
+        return $this->roles->whereIn('id', $normalizedIds->all())->isNotEmpty();
     }
 
     public function canAccessPanel(Panel $panel): bool

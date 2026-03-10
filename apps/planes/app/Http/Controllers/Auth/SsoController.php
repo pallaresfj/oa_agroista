@@ -143,15 +143,7 @@ class SsoController extends Controller
             ], static fn (mixed $value): bool => $value !== null),
         );
 
-        $docenteRole = $this->resolveDocenteRoleWithPanelAccess();
-
-        if (
-            $docenteRole
-            && method_exists($user, 'assignRole')
-            && ! $user->roles()->exists()
-        ) {
-            $user->assignRole($docenteRole);
-        }
+        $this->syncRoleForUser($user, $email);
 
         Auth::guard('web')->login($user);
         $request->session()->regenerate();
@@ -162,13 +154,51 @@ class SsoController extends Controller
 
     private function resolveDocenteRoleWithPanelAccess(): ?Role
     {
+        return $this->resolveRoleWithPanelAccess('Docente');
+    }
+
+    private function syncRoleForUser(User $user, string $email): void
+    {
+        if (! method_exists($user, 'syncRoles')) {
+            return;
+        }
+
+        $normalizedEmail = Str::lower(trim($email));
+        $supportEmails = collect(config('sso.support_emails', []))
+            ->map(static fn (mixed $item): string => Str::lower(trim((string) $item)))
+            ->filter()
+            ->values();
+
+        if ($normalizedEmail !== '' && $supportEmails->contains($normalizedEmail)) {
+            $supportRole = $this->resolveRoleWithPanelAccess('Soporte', grantAllPermissions: true);
+
+            if ($supportRole) {
+                $user->syncRoles([$supportRole]);
+            }
+
+            return;
+        }
+
+        if ($user->roles()->exists()) {
+            return;
+        }
+
+        $docenteRole = $this->resolveDocenteRoleWithPanelAccess();
+
+        if ($docenteRole && method_exists($user, 'assignRole')) {
+            $user->assignRole($docenteRole);
+        }
+    }
+
+    private function resolveRoleWithPanelAccess(string $roleName, bool $grantAllPermissions = false): ?Role
+    {
         if (! class_exists(Role::class) || ! class_exists(Permission::class)) {
             return null;
         }
 
-        /** @var Role $docenteRole */
-        $docenteRole = Role::query()->firstOrCreate([
-            'name' => 'Docente',
+        /** @var Role $role */
+        $role = Role::query()->firstOrCreate([
+            'name' => $roleName,
             'guard_name' => 'web',
         ]);
 
@@ -178,12 +208,35 @@ class SsoController extends Controller
             'guard_name' => 'web',
         ]);
 
-        if (! $docenteRole->hasPermissionTo($panelPermission)) {
-            $docenteRole->givePermissionTo($panelPermission);
+        $flushPermissionCache = false;
+
+        if (! $role->hasPermissionTo($panelPermission)) {
+            $role->givePermissionTo($panelPermission);
+            $flushPermissionCache = true;
+        }
+
+        if ($grantAllPermissions) {
+            $allPermissions = Permission::query()
+                ->where('guard_name', 'web')
+                ->pluck('name');
+
+            if ($allPermissions->isNotEmpty()) {
+                $currentPermissions = $role->permissions()->pluck('name');
+                $isOutOfSync = $allPermissions->count() !== $currentPermissions->count()
+                    || $allPermissions->diff($currentPermissions)->isNotEmpty();
+
+                if ($isOutOfSync) {
+                    $role->syncPermissions($allPermissions->all());
+                    $flushPermissionCache = true;
+                }
+            }
+        }
+
+        if ($flushPermissionCache) {
             app(PermissionRegistrar::class)->forgetCachedPermissions();
         }
 
-        return $docenteRole;
+        return $role;
     }
 
     public function startSessionCheck(Request $request): RedirectResponse
