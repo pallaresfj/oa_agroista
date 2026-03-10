@@ -11,6 +11,7 @@ RUN composer install \
     --no-progress \
     --prefer-dist \
     --optimize-autoloader \
+    --ignore-platform-req=php+ \
     --ignore-platform-req=ext-bcmath \
     --ignore-platform-req=ext-gd \
     --ignore-platform-req=ext-intl \
