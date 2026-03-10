@@ -133,6 +133,7 @@ it('assigns soporte role and syncs permissions for configured support emails', f
     expect($user?->hasRole('Docente'))->toBeFalse();
     expect($user?->can('manage_all_records'))->toBeTrue();
     expect($user?->can('panel_user'))->toBeTrue();
+    expect($user?->can('view_any_plan'))->toBeTrue();
 });
 
 it('starts silent idp session check for authenticated users', function () {
