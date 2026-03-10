@@ -80,6 +80,8 @@ services:
     volumes:
       - laravel_storage:/var/www/html/storage
       - laravel_cache:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS http://localhost/up || exit 1"]
       interval: 30s
@@ -102,6 +104,8 @@ services:
     volumes:
       - laravel_storage:/var/www/html/storage
       - laravel_cache:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
 
   scheduler:
     build:
@@ -118,7 +122,13 @@ services:
     volumes:
       - laravel_storage:/var/www/html/storage
       - laravel_cache:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
 
 volumes:
   laravel_storage:
   laravel_cache:
+
+networks:
+  dokploy-network:
+    external: true

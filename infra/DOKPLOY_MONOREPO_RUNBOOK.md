@@ -85,6 +85,7 @@ Para cada app (`auth`, `planes`, `asistencia`, `silo`):
    - `apps/planes/docker-compose.dokploy.yml`
    - `apps/asistencia/docker-compose.dokploy.yml`
    - `apps/silo/docker-compose.dokploy.yml`
+   - Nota de red: estos compose se conectan explicitamente a `dokploy-network` para alcanzar servicios compartidos (MySQL/Redis) desde `web`, `queue` y `scheduler`.
 4. Servicio publico HTTP: `web` puerto `80`.
 5. Cargar variables desde `.env.dokploy.example` correspondiente y ajustar valores reales.
 
