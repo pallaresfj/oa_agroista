@@ -23,6 +23,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
+COPY --from=vendor /app/vendor ./vendor
 COPY . .
 RUN npm run build
 
