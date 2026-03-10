@@ -94,10 +94,10 @@ Variables obligatorias comunes:
 - `APP_KEY`
 - `APP_URL`
 - `SUPERADMIN_EMAILS` (lista CSV de correos con acceso al panel `admin`)
-- `DB_HOST=mysql-shared`
+- `DB_HOST` usando **Internal Host** del servicio MySQL en Dokploy (ej. `mysql-shared-xxxxxx`)
 - `DB_PORT=3306`
 - `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD` segun app
-- `REDIS_HOST=redis-shared`
+- `REDIS_HOST` usando **Internal Host** del servicio Redis en Dokploy (ej. `redis-shared-xxxxxx`)
 - `REDIS_PORT=6379`
 - `REDIS_PREFIX` unico por app (`auth_`, `planes_`, `asistencia_`, `silo_`)
 - `SESSION_DOMAIN=` (vacio, no usar literal `null`)
