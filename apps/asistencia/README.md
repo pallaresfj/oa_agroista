@@ -110,3 +110,8 @@ Troubleshooting rápido:
 - error de JWKS/discovery: verificar `http://localhost:8000/.well-known/openid-configuration`.
 - `missing email`: revisar scopes `openid email profile`.
 - logout no cierra sesión: confirmar login SSO sin `remember` y limpiar cookies del dominio.
+
+## Deploy Dokploy (Monorepo)
+
+- Guía app `asistencia`: `docs/DOKPLOY_DEPLOY.md`
+- Guía ecosistema completo: `../../infra/DOKPLOY_MONOREPO_RUNBOOK.md`

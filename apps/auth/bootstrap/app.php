@@ -12,6 +12,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust reverse-proxy headers (e.g. Dokploy/Traefik) for scheme/host detection.
+        $middleware->trustProxies(at: '*');
+
         $middleware->append(\App\Http\Middleware\AuditPassportFlow::class);
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureGoogleSessionIsAlive::class);
         $middleware->validateCsrfTokens(except: [

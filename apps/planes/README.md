@@ -118,4 +118,5 @@ Troubleshooting rápido:
 
 ## Deploy
 
-- Guía Dokploy (VPS): `docs/DOKPLOY_DEPLOY.md`
+- Guía app `planes`: `docs/DOKPLOY_DEPLOY.md`
+- Guía ecosistema completo: `../../infra/DOKPLOY_MONOREPO_RUNBOOK.md`

@@ -67,7 +67,6 @@ Implemented in `apps/planes`, `apps/silo`, `apps/asistencia`:
 
 ## Pending for next iteration
 
-- Define path strategy for `agroista/core` in monorepo (`core` source of truth).
-- CI/CD path-based workflows per app in monorepo.
+- Converge duplicated `agroista/core` sources (`apps/*/packages/agroista/core` -> `core/`) without breaking app compatibility.
 - Full RBAC migration for `apps/silo` and `apps/asistencia` to Shield/Spatie.
-- Institutional replication playbook from monorepo template.
+- Institutional replication automation from monorepo runbook.

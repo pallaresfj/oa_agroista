@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Legacy SSH deploy helper. For Dokploy monorepo use docs/DOKPLOY_DEPLOY.md.
+
 # Script de deploy para Teaching Assistance
 # Uso: ./deploy.sh
 

@@ -30,3 +30,8 @@ Then publish config:
 ```bash
 php artisan vendor:publish --tag=agroista-core-config
 ```
+
+## Monorepo note (current state)
+
+- Client apps currently consume `agroista/core` from `apps/*/packages/agroista/core` during Docker/Composer builds.
+- `core/` at repository root is kept as the shared reference while convergence work is pending.

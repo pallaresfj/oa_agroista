@@ -1,3 +1,8 @@
+# PREBUILT-IMAGES TEMPLATE (legacy/optional)
+# This compose file expects container images already published in a registry (ghcr.io/<org>/*).
+# For monorepo build-in-Dokploy strategy, use apps/*/docker-compose.dokploy.yml and
+# infra/DOKPLOY_MONOREPO_RUNBOOK.md instead.
+
 services:
   auth:
     image: ghcr.io/<org>/auth:latest

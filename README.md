@@ -53,3 +53,22 @@ Cada secret debe ser la URL del webhook de deploy del servicio en Dokploy.
 - Cada app se despliega como servicio independiente en Dokploy.
 - Cada app mantiene su base de datos propia.
 - Integracion entre apps solo via API y tokens de `auth`.
+
+### Runbook oficial Dokploy (monorepo)
+
+- Guia central: `infra/DOKPLOY_MONOREPO_RUNBOOK.md`
+- Compose por app:
+  - `apps/auth/docker-compose.dokploy.yml`
+  - `apps/planes/docker-compose.dokploy.yml`
+  - `apps/asistencia/docker-compose.dokploy.yml`
+  - `apps/silo/docker-compose.dokploy.yml`
+- Variables por app:
+  - `apps/auth/.env.dokploy.example`
+  - `apps/planes/.env.dokploy.example`
+  - `apps/asistencia/.env.dokploy.example`
+  - `apps/silo/.env.dokploy.example`
+
+## Estrategia de core
+
+- Actualmente los builds Docker y Composer de las apps cliente (`planes`, `asistencia`, `silo`) usan `apps/*/packages/agroista/core` como source efectivo.
+- `core/` en la raiz se mantiene como referencia compartida hasta completar la convergencia.

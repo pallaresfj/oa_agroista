@@ -1,35 +1,35 @@
-# Deploy de `planes` en Dokploy (Monorepo)
+# Deploy de `asistencia` en Dokploy (Monorepo)
 
 Esta guia aplica al monorepo `oa_agroista`.
 
-Para el flujo completo de las 4 apps revisar primero:
+Flujo completo del ecosistema:
 
 - `infra/DOKPLOY_MONOREPO_RUNBOOK.md`
 
 ## Archivos de esta app
 
-- `apps/planes/Dockerfile`
-- `apps/planes/docker-compose.dokploy.yml`
-- `apps/planes/.env.dokploy.example`
+- `apps/asistencia/Dockerfile`
+- `apps/asistencia/docker-compose.dokploy.yml`
+- `apps/asistencia/.env.dokploy.example`
 
-## Configuracion en Dokploy (app `planes`)
+## Configuracion en Dokploy (app `asistencia`)
 
 1. Crear app en Dokploy conectada al monorepo.
 2. Seleccionar despliegue por Docker Compose.
-3. Archivo compose: `apps/planes/docker-compose.dokploy.yml`.
+3. Archivo compose: `apps/asistencia/docker-compose.dokploy.yml`.
 4. Servicio publico: `web` puerto `80`.
-5. Variables: copiar desde `apps/planes/.env.dokploy.example` y ajustar valores reales.
+5. Variables: copiar desde `apps/asistencia/.env.dokploy.example` y ajustar valores reales.
 
 Variables minimas:
 
 - `APP_KEY`
-- `APP_URL=https://planes.<dominio>`
+- `APP_URL=https://asistencia.<dominio>`
 - `DB_HOST=mysql-shared`
-- `DB_DATABASE=db_planes`
-- `DB_USERNAME=planes_user`
+- `DB_DATABASE=db_asistencia`
+- `DB_USERNAME=asistencia_user`
 - `DB_PASSWORD=...`
 - `REDIS_HOST=redis-shared`
-- `REDIS_PREFIX=planes_`
+- `REDIS_PREFIX=asistencia_`
 - `SSO_ISSUER=https://auth.<dominio>`
 - `SSO_DISCOVERY_URL=https://auth.<dominio>/.well-known/openid-configuration`
 - `AUTH_API_BASE=https://auth.<dominio>/api/ecosystem`
@@ -50,5 +50,5 @@ php artisan view:cache
 ## Verificacion rapida
 
 - `GET /up` responde 200.
-- Login SSO desde `/sso/login` completa callback correctamente.
-- Livewire en panel `/admin` responde 200 en requests `/livewire/*`.
+- Login SSO completa callback correctamente.
+- Revisar logs de `scheduler` para `attendance:generate-absences`.

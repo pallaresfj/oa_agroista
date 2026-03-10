@@ -1,5 +1,8 @@
 # Despliegue a Produccion - SILO
 
+> Nota: este documento describe un flujo legacy por cPanel/SSH.
+> Para Dokploy en monorepo usar `docs/DOKPLOY_DEPLOY.md` y `../../infra/DOKPLOY_MONOREPO_RUNBOOK.md`.
+
 Este documento define el flujo oficial de despliegue para SILO en Hostinger con Laravel 12 y PHP 8.4.
 
 ## Alcance

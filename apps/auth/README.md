@@ -287,3 +287,8 @@ Incluye pruebas para:
 - UserInfo + scope `openid`
 - Callback Google (éxito y dominio no permitido)
 - Auditoría de emisión/fallo de token
+
+## Deploy Dokploy (Monorepo)
+
+- Guía app `auth`: `docs/DOKPLOY_DEPLOY.md`
+- Guía ecosistema completo: `../../infra/DOKPLOY_MONOREPO_RUNBOOK.md`

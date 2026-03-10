@@ -9,7 +9,9 @@
 
 ## SILO Deployment
 
-- Production runbook: `docs/DEPLOYMENT_PRODUCTION.md`
+- Dokploy (monorepo): `docs/DOKPLOY_DEPLOY.md`
+- Ecosistema completo: `../../infra/DOKPLOY_MONOREPO_RUNBOOK.md`
+- Legacy cPanel/SSH runbook: `docs/DEPLOYMENT_PRODUCTION.md`
 - Local release helper: `scripts/deploy/local-release.sh`
 - Server first deploy helper: `scripts/deploy/server-first-deploy.sh`
 - Server update helper: `scripts/deploy/server-update.sh`

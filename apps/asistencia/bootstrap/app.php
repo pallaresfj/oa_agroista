@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust reverse-proxy headers (e.g. Dokploy/Traefik) for scheme/host detection.
+        $middleware->trustProxies(at: '*');
+
         $middleware->appendToGroup('web', \App\Http\Middleware\EnsureIdpSessionIsAlive::class);
         $middleware->alias([
             'role' => CheckRole::class,
