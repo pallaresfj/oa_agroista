@@ -18,6 +18,8 @@ class InstitutionSeeder extends Seeder
         ];
 
         $this->upsertSetting('name', 'string', 'IED Agropecuaria José María Herrera', null);
+        $this->upsertSetting('tagline', 'string', 'Educacion Agropecuaria de Excelencia', null);
+        $this->upsertSetting('location', 'string', 'Pivijay, Magdalena - Colombia', null);
         $this->upsertSetting('nit', 'string', '8190011899', null);
         $this->upsertSetting('logo_url', 'string', (string) env('INSTITUTION_DEFAULT_LOGO_URL', ''), null);
         $this->upsertSetting('color_palette', 'json', null, $palette);

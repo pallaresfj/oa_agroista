@@ -48,6 +48,12 @@ class Institution extends Page implements HasForms
                     ->label('Nombre')
                     ->required()
                     ->maxLength(255),
+                TextInput::make('tagline')
+                    ->label('Eslogan')
+                    ->maxLength(255),
+                TextInput::make('location')
+                    ->label('Ubicación')
+                    ->maxLength(255),
                 TextInput::make('nit')
                     ->label('NIT')
                     ->required()
@@ -129,6 +135,8 @@ class Institution extends Page implements HasForms
         }
 
         $this->upsertSetting('name', 'string', (string) ($state['name'] ?? ''), null);
+        $this->upsertSetting('tagline', 'string', (string) ($state['tagline'] ?? ''), null);
+        $this->upsertSetting('location', 'string', (string) ($state['location'] ?? ''), null);
         $this->upsertSetting('nit', 'string', (string) ($state['nit'] ?? ''), null);
         $this->upsertSetting('logo_url', 'string', (string) ($state['logo_url'] ?? ''), null);
         $this->upsertSetting('color_palette', 'json', null, $palette);
@@ -142,7 +150,7 @@ class Institution extends Page implements HasForms
     private function getFormDefaults(): array
     {
         $settings = InstitutionSetting::query()
-            ->whereIn('key', ['name', 'nit', 'logo_url', 'color_palette'])
+            ->whereIn('key', ['name', 'tagline', 'location', 'nit', 'logo_url', 'color_palette'])
             ->get()
             ->mapWithKeys(function (InstitutionSetting $setting): array {
                 if ($setting->value_json !== null) {
@@ -162,6 +170,8 @@ class Institution extends Page implements HasForms
 
         return [
             'name' => (string) $settings->get('name', config('sso.institution_default_name', 'Institucion')),
+            'tagline' => (string) $settings->get('tagline', 'Educacion Agropecuaria de Excelencia'),
+            'location' => (string) $settings->get('location', 'Pivijay, Magdalena - Colombia'),
             'nit' => (string) $settings->get('nit', ''),
             'logo_url' => (string) $settings->get('logo_url', ''),
             'palette' => $palette,

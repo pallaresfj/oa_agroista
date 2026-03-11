@@ -5,6 +5,8 @@
     $palette = $institutionBranding['palette'];
     $institutionName = (string) ($institutionBranding['name'] ?? config('app.name', 'Institucion'));
     $institutionLogoUrl = $institutionBranding['logo_url'] ?? null;
+    $institutionTagline = trim((string) ($institutionBranding['tagline'] ?? 'Educacion Agropecuaria de Excelencia'));
+    $institutionLocation = trim((string) ($institutionBranding['location'] ?? 'Pivijay, Magdalena - Colombia'));
 @endphp
 <head>
     <meta charset="utf-8" />
@@ -41,7 +43,7 @@
 
             <div class="max-w-xl">
                 <h1 class="text-white text-5xl lg:text-6xl font-black leading-[1.1] mb-6 tracking-tight">
-                    Educacion <span class="text-primary">Agropecuaria</span> de Excelencia
+                    {!! nl2br(e($institutionTagline !== '' ? $institutionTagline : 'Educacion Agropecuaria de Excelencia')) !!}
                 </h1>
                 <p class="text-slate-200 text-lg lg:text-xl leading-relaxed font-medium opacity-90">
                     Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.
@@ -52,7 +54,7 @@
         <div class="relative z-10 mt-auto pt-10">
             <div class="flex items-center gap-2 text-slate-300">
                 <span class="material-symbols-outlined text-primary">location_on</span>
-                <span class="text-sm font-semibold tracking-wide uppercase">Pivijay, Magdalena - Colombia</span>
+                <span class="text-sm font-semibold tracking-wide uppercase">{{ $institutionLocation !== '' ? $institutionLocation : 'Pivijay, Magdalena - Colombia' }}</span>
             </div>
         </div>
     </div>
@@ -61,13 +63,14 @@
         <div class="max-w-2xl mx-auto w-full flex flex-col gap-12">
             <section class="bg-white dark:bg-[#1c261c] p-8 lg:p-10 rounded-2xl shadow-xl border border-slate-200 dark:border-[#293829]">
                 <div class="mb-6 flex justify-center">
-                    <img
-                        src="{{ $institutionLogoUrl ?: asset('images/logo-ied.png') }}"
-                        alt="Logo {{ $institutionName }}"
-                        class="h-[100px] w-[100px] rounded-full object-cover ring-1 ring-primary/20 bg-white dark:bg-slate-900"
-                        style="width: 100px; height: 100px;"
-                        loading="eager"
-                    />
+                    <div class="h-[100px] w-[100px] rounded-full ring-1 ring-primary/20 bg-white dark:bg-slate-900 overflow-hidden p-1">
+                        <img
+                            src="{{ $institutionLogoUrl ?: asset('images/logo-ied.png') }}"
+                            alt="Logo {{ $institutionName }}"
+                            class="h-full w-full rounded-full object-contain"
+                            loading="eager"
+                        />
+                    </div>
                 </div>
 
                 <div class="mb-8">

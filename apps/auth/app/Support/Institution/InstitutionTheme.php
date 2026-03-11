@@ -20,7 +20,7 @@ class InstitutionTheme
     private static ?array $paletteCache = null;
 
     /**
-     * @var array{name: string, logo_url: ?string, nit: string, palette: array<string, string>, primary_color: string, secondary_color: string}|null
+     * @var array{name: string, logo_url: ?string, nit: string, tagline: string, location: string, palette: array<string, string>, primary_color: string, secondary_color: string}|null
      */
     private static ?array $brandingCache = null;
 
@@ -69,7 +69,7 @@ class InstitutionTheme
     }
 
     /**
-     * @return array{name: string, logo_url: ?string, nit: string, palette: array<string, string>, primary_color: string, secondary_color: string}
+     * @return array{name: string, logo_url: ?string, nit: string, tagline: string, location: string, palette: array<string, string>, primary_color: string, secondary_color: string}
      */
     public static function branding(): array
     {
@@ -82,11 +82,15 @@ class InstitutionTheme
         $name = trim((string) $settings->get('name', config('sso.institution_default_name', config('app.name', 'Institucion'))));
         $nit = trim((string) $settings->get('nit', ''));
         $logoUrl = trim((string) $settings->get('logo_url', ''));
+        $tagline = trim((string) $settings->get('tagline', 'Educacion Agropecuaria de Excelencia'));
+        $location = trim((string) $settings->get('location', 'Pivijay, Magdalena - Colombia'));
 
         self::$brandingCache = [
             'name' => $name !== '' ? $name : (string) config('app.name', 'Institucion'),
             'logo_url' => $logoUrl !== '' ? $logoUrl : null,
             'nit' => $nit,
+            'tagline' => $tagline !== '' ? $tagline : 'Educacion Agropecuaria de Excelencia',
+            'location' => $location !== '' ? $location : 'Pivijay, Magdalena - Colombia',
             'palette' => $palette,
             'primary_color' => $palette['primary'],
             'secondary_color' => $palette['success'],
@@ -106,7 +110,7 @@ class InstitutionTheme
 
         try {
             self::$settingsCache = InstitutionSetting::query()
-                ->whereIn('key', ['name', 'nit', 'logo_url', 'color_palette'])
+                ->whereIn('key', ['name', 'nit', 'logo_url', 'tagline', 'location', 'color_palette'])
                 ->where('is_public', true)
                 ->get()
                 ->mapWithKeys(function (InstitutionSetting $setting): array {

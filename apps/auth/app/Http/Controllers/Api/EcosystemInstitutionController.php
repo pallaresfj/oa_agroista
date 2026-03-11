@@ -14,6 +14,8 @@ class EcosystemInstitutionController extends Controller
      */
     private const SETTING_TYPES = [
         'name' => 'string',
+        'tagline' => 'string',
+        'location' => 'string',
         'nit' => 'string',
         'logo_url' => 'string',
         'color_palette' => 'json',
@@ -56,6 +58,8 @@ class EcosystemInstitutionController extends Controller
         }
 
         $name = trim((string) $settings->get('name', config('sso.institution_default_name', 'Institucion')));
+        $tagline = trim((string) $settings->get('tagline', 'Educacion Agropecuaria de Excelencia'));
+        $location = trim((string) $settings->get('location', 'Pivijay, Magdalena - Colombia'));
         $logoUrl = trim((string) $settings->get('logo_url', ''));
 
         return response()->json([
@@ -66,6 +70,8 @@ class EcosystemInstitutionController extends Controller
             'secondary_color' => (string) ($palette['success'] ?? '#00c853'),
             'settings' => [
                 'nit' => trim((string) $settings->get('nit', '')),
+                'tagline' => $tagline !== '' ? $tagline : 'Educacion Agropecuaria de Excelencia',
+                'location' => $location !== '' ? $location : 'Pivijay, Magdalena - Colombia',
                 'color_palette' => $palette,
             ],
         ]);
@@ -80,6 +86,8 @@ class EcosystemInstitutionController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'tagline' => ['nullable', 'string', 'max:255'],
+            'location' => ['nullable', 'string', 'max:255'],
             'nit' => ['nullable', 'string', 'max:100'],
             'logo_url' => ['nullable', 'url', 'max:2048'],
             'primary_color' => ['nullable', 'string', 'max:20'],
@@ -107,6 +115,8 @@ class EcosystemInstitutionController extends Controller
         }
 
         $this->upsertSetting('name', 'string', (string) $data['name'], null, true);
+        $this->upsertSetting('tagline', 'string', (string) ($data['tagline'] ?? ''), null, true);
+        $this->upsertSetting('location', 'string', (string) ($data['location'] ?? ''), null, true);
         $this->upsertSetting('nit', 'string', (string) ($data['nit'] ?? ''), null, true);
         $this->upsertSetting('logo_url', 'string', (string) ($data['logo_url'] ?? ''), null, true);
         $this->upsertSetting('color_palette', 'json', null, $palette, true);
@@ -119,6 +129,8 @@ class EcosystemInstitutionController extends Controller
                 'logo_url' => $data['logo_url'] ?? null,
                 'settings' => [
                     'nit' => (string) ($data['nit'] ?? ''),
+                    'tagline' => (string) ($data['tagline'] ?? ''),
+                    'location' => (string) ($data['location'] ?? ''),
                     'color_palette' => $palette,
                 ],
             ],

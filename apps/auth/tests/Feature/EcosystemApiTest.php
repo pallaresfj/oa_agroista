@@ -28,6 +28,18 @@ class EcosystemApiTest extends TestCase
             'value_text' => '123456789-0',
             'is_public' => true,
         ]);
+        InstitutionSetting::query()->create([
+            'key' => 'tagline',
+            'type' => 'string',
+            'value_text' => 'Educacion Agropecuaria de Excelencia',
+            'is_public' => true,
+        ]);
+        InstitutionSetting::query()->create([
+            'key' => 'location',
+            'type' => 'string',
+            'value_text' => 'Pivijay, Magdalena - Colombia',
+            'is_public' => true,
+        ]);
 
         InstitutionSetting::query()->create([
             'key' => 'logo_url',
@@ -57,6 +69,8 @@ class EcosystemApiTest extends TestCase
             ->assertJsonPath('name', 'IED Agropecuaria')
             ->assertJsonPath('logo_url', 'https://example.com/logo.png')
             ->assertJsonPath('settings.nit', '123456789-0')
+            ->assertJsonPath('settings.tagline', 'Educacion Agropecuaria de Excelencia')
+            ->assertJsonPath('settings.location', 'Pivijay, Magdalena - Colombia')
             ->assertJsonPath('settings.color_palette.primary', '#f50404');
     }
 
@@ -73,6 +87,8 @@ class EcosystemApiTest extends TestCase
 
         $payload = [
             'name' => 'IED Jose Maria Herrera',
+            'tagline' => 'Educacion Agropecuaria de Excelencia',
+            'location' => 'Pivijay, Magdalena - Colombia',
             'nit' => '901.000.123-4',
             'logo_url' => 'https://example.com/new-logo.png',
             'color_palette' => [
@@ -87,7 +103,9 @@ class EcosystemApiTest extends TestCase
         $this->putJson('/api/ecosystem/institution', $payload)
             ->assertOk()
             ->assertJsonPath('institution.name', 'IED Jose Maria Herrera')
-            ->assertJsonPath('institution.settings.nit', '901.000.123-4');
+            ->assertJsonPath('institution.settings.nit', '901.000.123-4')
+            ->assertJsonPath('institution.settings.tagline', 'Educacion Agropecuaria de Excelencia')
+            ->assertJsonPath('institution.settings.location', 'Pivijay, Magdalena - Colombia');
 
         $this->assertDatabaseHas('institution_settings', [
             'key' => 'name',
@@ -97,6 +115,14 @@ class EcosystemApiTest extends TestCase
         $this->assertDatabaseHas('institution_settings', [
             'key' => 'nit',
             'value_text' => '901.000.123-4',
+        ]);
+        $this->assertDatabaseHas('institution_settings', [
+            'key' => 'tagline',
+            'value_text' => 'Educacion Agropecuaria de Excelencia',
+        ]);
+        $this->assertDatabaseHas('institution_settings', [
+            'key' => 'location',
+            'value_text' => 'Pivijay, Magdalena - Colombia',
         ]);
     }
 
