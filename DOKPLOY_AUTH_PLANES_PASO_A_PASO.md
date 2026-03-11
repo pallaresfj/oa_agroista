@@ -166,7 +166,7 @@ En `auth-web`:
 
 ```bash
 cd /var/www/html
-php artisan passport:client --name="Planes Dokploy" --redirect_uri="https://oa-planes.iedagropivijay.edu.co/sso/callback"
+php artisan passport:client --name="Planes Dokploy" --redirect_uri="https://oa-planes.iedagropivijay.edu.co/sso/callback,https://oa-planes.iedagropivijay.edu.co/sso/session-check/callback"
 ```
 
 ### 8.1 Datos exactos del cliente `planes` (temporal y final)
@@ -174,8 +174,12 @@ php artisan passport:client --name="Planes Dokploy" --redirect_uri="https://oa-p
 Usar estos valores para evitar errores de callback/logout:
 
 - Redirect URIs:
-  - Temporal: `https://oa-planes.iedagropivijay.edu.co/sso/callback`
-  - Final (cutover): `https://planes.iedagropivijay.edu.co/sso/callback`
+  - Temporal:
+    - `https://oa-planes.iedagropivijay.edu.co/sso/callback`
+    - `https://oa-planes.iedagropivijay.edu.co/sso/session-check/callback`
+  - Final (cutover):
+    - `https://planes.iedagropivijay.edu.co/sso/callback`
+    - `https://planes.iedagropivijay.edu.co/sso/session-check/callback`
 - Frontchannel logout URIs:
   - Temporal: `https://oa-planes.iedagropivijay.edu.co/sso/frontchannel-logout`
   - Final (cutover): `https://planes.iedagropivijay.edu.co/sso/frontchannel-logout`
