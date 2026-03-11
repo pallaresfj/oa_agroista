@@ -137,10 +137,28 @@ Opcional bootstrap inicial:
 php artisan db:seed --force
 ```
 
-### planes / asistencia / silo (servicio `web`)
+### planes / asistencia (servicio `web`)
 
 ```bash
 php artisan migrate --force
+php artisan filament:assets
+php artisan optimize:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+### silo (servicio `web`)
+
+Con `SILO_BOOTSTRAP_ON_START=true`, `silo` ejecuta automaticamente en startup:
+
+- `php artisan migrate --force`
+- `php artisan db:seed --class=Database\Seeders\RolePermissionSeeder --force`
+- `php artisan db:seed --class=Database\Seeders\AdminUserSeeder --force`
+
+Comandos manuales (solo si necesitas forzar):
+
+```bash
 php artisan filament:assets
 php artisan optimize:clear
 php artisan config:cache

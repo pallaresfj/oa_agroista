@@ -34,13 +34,23 @@ Variables minimas:
 - `SSO_DISCOVERY_URL=https://auth.<dominio>/.well-known/openid-configuration`
 - `AUTH_API_BASE=https://auth.<dominio>/api/ecosystem`
 - `GOOGLE_DRIVE_*` y `GOOGLE_WORKSPACE_*` (si usas integraciones Google)
+- `SILO_BOOTSTRAP_ON_START=true` (recomendado)
 
-## Primer despliegue (one-time)
+## Bootstrap automatico en deploy
 
-Ejecutar en servicio `web`:
+Con `SILO_BOOTSTRAP_ON_START=true`, el contenedor `web` ejecuta automaticamente al iniciar:
+
+- `php artisan migrate --force`
+- `php artisan db:seed --class=Database\Seeders\RolePermissionSeeder --force`
+- `php artisan db:seed --class=Database\Seeders\AdminUserSeeder --force`
+
+Esto deja roles/permisos y usuario soporte inicial listos sin pasos manuales.
+
+## Comandos manuales (solo si necesitas forzar)
+
+En servicio `web`:
 
 ```bash
-php artisan migrate --force
 php artisan filament:assets
 php artisan optimize:clear
 php artisan config:cache
