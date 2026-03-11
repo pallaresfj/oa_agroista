@@ -33,13 +33,23 @@ Variables minimas:
 - `SSO_ISSUER=https://auth.<dominio>`
 - `SSO_DISCOVERY_URL=https://auth.<dominio>/.well-known/openid-configuration`
 - `AUTH_API_BASE=https://auth.<dominio>/api/ecosystem`
+- `ASISTENCIA_BOOTSTRAP_ON_START=true` (recomendado)
 
-## Primer despliegue (one-time)
+## Bootstrap automatico en deploy
 
-Ejecutar en servicio `web`:
+Con `ASISTENCIA_BOOTSTRAP_ON_START=true`, el contenedor `web` ejecuta automaticamente al iniciar:
+
+- `php artisan migrate --force`
+- `php artisan shield:generate --all --panel=app --option=permissions --no-interaction` (si el comando existe)
+- `php artisan db:seed --force`
+
+Esto evita errores 500 del panel por permisos faltantes en primer login.
+
+## Comandos manuales (solo si necesitas forzar)
+
+En servicio `web`:
 
 ```bash
-php artisan migrate --force
 php artisan filament:assets
 php artisan optimize:clear
 php artisan config:cache
