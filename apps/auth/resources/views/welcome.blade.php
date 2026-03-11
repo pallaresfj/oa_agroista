@@ -6,7 +6,9 @@
     $institutionName = (string) ($institutionBranding['name'] ?? config('app.name', 'Institucion'));
     $institutionLogoUrl = $institutionBranding['logo_url'] ?? null;
     $institutionTagline = trim((string) ($institutionBranding['tagline'] ?? 'Educacion Agropecuaria de Excelencia'));
+    $institutionHeroDescription = trim((string) ($institutionBranding['hero_description'] ?? 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.'));
     $institutionLocation = trim((string) ($institutionBranding['location'] ?? 'Pivijay, Magdalena - Colombia'));
+    $institutionNameIcon = trim((string) ($institutionBranding['name_icon'] ?? 'agriculture'));
 @endphp
 <head>
     <meta charset="utf-8" />
@@ -36,7 +38,7 @@
         <div class="relative z-10">
             <div class="flex items-center gap-3 mb-8">
                 <div class="bg-primary p-3 rounded-xl shadow-lg shadow-primary/20">
-                    <span class="material-symbols-outlined text-background-dark text-3xl font-bold">agriculture</span>
+                    <span class="material-symbols-outlined text-background-dark text-3xl font-bold">{{ $institutionNameIcon !== '' ? $institutionNameIcon : 'agriculture' }}</span>
                 </div>
                 <h2 class="text-white text-xl font-bold tracking-tight">{{ $institutionName }}</h2>
             </div>
@@ -46,7 +48,7 @@
                     {!! nl2br(e($institutionTagline !== '' ? $institutionTagline : 'Educacion Agropecuaria de Excelencia')) !!}
                 </h1>
                 <p class="text-slate-200 text-lg lg:text-xl leading-relaxed font-medium opacity-90">
-                    Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.
+                    {!! nl2br(e($institutionHeroDescription !== '' ? $institutionHeroDescription : 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.')) !!}
                 </p>
             </div>
         </div>

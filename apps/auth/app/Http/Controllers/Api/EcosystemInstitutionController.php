@@ -15,7 +15,9 @@ class EcosystemInstitutionController extends Controller
     private const SETTING_TYPES = [
         'name' => 'string',
         'tagline' => 'string',
+        'hero_description' => 'string',
         'location' => 'string',
+        'name_icon' => 'string',
         'nit' => 'string',
         'logo_url' => 'string',
         'color_palette' => 'json',
@@ -59,7 +61,9 @@ class EcosystemInstitutionController extends Controller
 
         $name = trim((string) $settings->get('name', config('sso.institution_default_name', 'Institucion')));
         $tagline = trim((string) $settings->get('tagline', 'Educacion Agropecuaria de Excelencia'));
+        $heroDescription = trim((string) $settings->get('hero_description', 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.'));
         $location = trim((string) $settings->get('location', 'Pivijay, Magdalena - Colombia'));
+        $nameIcon = trim((string) $settings->get('name_icon', 'agriculture'));
         $logoUrl = trim((string) $settings->get('logo_url', ''));
 
         return response()->json([
@@ -71,7 +75,9 @@ class EcosystemInstitutionController extends Controller
             'settings' => [
                 'nit' => trim((string) $settings->get('nit', '')),
                 'tagline' => $tagline !== '' ? $tagline : 'Educacion Agropecuaria de Excelencia',
+                'hero_description' => $heroDescription !== '' ? $heroDescription : 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.',
                 'location' => $location !== '' ? $location : 'Pivijay, Magdalena - Colombia',
+                'name_icon' => $nameIcon !== '' ? $nameIcon : 'agriculture',
                 'color_palette' => $palette,
             ],
         ]);
@@ -87,7 +93,9 @@ class EcosystemInstitutionController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'tagline' => ['nullable', 'string', 'max:255'],
+            'hero_description' => ['nullable', 'string', 'max:1000'],
             'location' => ['nullable', 'string', 'max:255'],
+            'name_icon' => ['nullable', 'string', 'max:80', 'regex:/^[A-Za-z0-9_]+$/'],
             'nit' => ['nullable', 'string', 'max:100'],
             'logo_url' => ['nullable', 'url', 'max:2048'],
             'primary_color' => ['nullable', 'string', 'max:20'],
@@ -116,7 +124,9 @@ class EcosystemInstitutionController extends Controller
 
         $this->upsertSetting('name', 'string', (string) $data['name'], null, true);
         $this->upsertSetting('tagline', 'string', (string) ($data['tagline'] ?? ''), null, true);
+        $this->upsertSetting('hero_description', 'string', (string) ($data['hero_description'] ?? ''), null, true);
         $this->upsertSetting('location', 'string', (string) ($data['location'] ?? ''), null, true);
+        $this->upsertSetting('name_icon', 'string', (string) ($data['name_icon'] ?? ''), null, true);
         $this->upsertSetting('nit', 'string', (string) ($data['nit'] ?? ''), null, true);
         $this->upsertSetting('logo_url', 'string', (string) ($data['logo_url'] ?? ''), null, true);
         $this->upsertSetting('color_palette', 'json', null, $palette, true);
@@ -130,7 +140,9 @@ class EcosystemInstitutionController extends Controller
                 'settings' => [
                     'nit' => (string) ($data['nit'] ?? ''),
                     'tagline' => (string) ($data['tagline'] ?? ''),
+                    'hero_description' => (string) ($data['hero_description'] ?? ''),
                     'location' => (string) ($data['location'] ?? ''),
+                    'name_icon' => (string) ($data['name_icon'] ?? ''),
                     'color_palette' => $palette,
                 ],
             ],

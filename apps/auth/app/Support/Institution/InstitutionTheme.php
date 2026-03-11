@@ -20,7 +20,7 @@ class InstitutionTheme
     private static ?array $paletteCache = null;
 
     /**
-     * @var array{name: string, logo_url: ?string, nit: string, tagline: string, location: string, palette: array<string, string>, primary_color: string, secondary_color: string}|null
+     * @var array{name: string, logo_url: ?string, nit: string, tagline: string, hero_description: string, location: string, name_icon: string, palette: array<string, string>, primary_color: string, secondary_color: string}|null
      */
     private static ?array $brandingCache = null;
 
@@ -69,7 +69,7 @@ class InstitutionTheme
     }
 
     /**
-     * @return array{name: string, logo_url: ?string, nit: string, tagline: string, location: string, palette: array<string, string>, primary_color: string, secondary_color: string}
+     * @return array{name: string, logo_url: ?string, nit: string, tagline: string, hero_description: string, location: string, name_icon: string, palette: array<string, string>, primary_color: string, secondary_color: string}
      */
     public static function branding(): array
     {
@@ -83,14 +83,18 @@ class InstitutionTheme
         $nit = trim((string) $settings->get('nit', ''));
         $logoUrl = trim((string) $settings->get('logo_url', ''));
         $tagline = trim((string) $settings->get('tagline', 'Educacion Agropecuaria de Excelencia'));
+        $heroDescription = trim((string) $settings->get('hero_description', 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.'));
         $location = trim((string) $settings->get('location', 'Pivijay, Magdalena - Colombia'));
+        $nameIcon = trim((string) $settings->get('name_icon', 'agriculture'));
 
         self::$brandingCache = [
             'name' => $name !== '' ? $name : (string) config('app.name', 'Institucion'),
             'logo_url' => $logoUrl !== '' ? $logoUrl : null,
             'nit' => $nit,
             'tagline' => $tagline !== '' ? $tagline : 'Educacion Agropecuaria de Excelencia',
+            'hero_description' => $heroDescription !== '' ? $heroDescription : 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.',
             'location' => $location !== '' ? $location : 'Pivijay, Magdalena - Colombia',
+            'name_icon' => $nameIcon !== '' ? $nameIcon : 'agriculture',
             'palette' => $palette,
             'primary_color' => $palette['primary'],
             'secondary_color' => $palette['success'],
@@ -110,7 +114,7 @@ class InstitutionTheme
 
         try {
             self::$settingsCache = InstitutionSetting::query()
-                ->whereIn('key', ['name', 'nit', 'logo_url', 'tagline', 'location', 'color_palette'])
+                ->whereIn('key', ['name', 'nit', 'logo_url', 'tagline', 'hero_description', 'location', 'name_icon', 'color_palette'])
                 ->where('is_public', true)
                 ->get()
                 ->mapWithKeys(function (InstitutionSetting $setting): array {

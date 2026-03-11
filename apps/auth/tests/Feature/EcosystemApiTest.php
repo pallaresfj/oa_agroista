@@ -35,9 +35,21 @@ class EcosystemApiTest extends TestCase
             'is_public' => true,
         ]);
         InstitutionSetting::query()->create([
+            'key' => 'hero_description',
+            'type' => 'string',
+            'value_text' => 'Bienvenido al Portal Unico de Acceso.',
+            'is_public' => true,
+        ]);
+        InstitutionSetting::query()->create([
             'key' => 'location',
             'type' => 'string',
             'value_text' => 'Pivijay, Magdalena - Colombia',
+            'is_public' => true,
+        ]);
+        InstitutionSetting::query()->create([
+            'key' => 'name_icon',
+            'type' => 'string',
+            'value_text' => 'agriculture',
             'is_public' => true,
         ]);
 
@@ -70,7 +82,9 @@ class EcosystemApiTest extends TestCase
             ->assertJsonPath('logo_url', 'https://example.com/logo.png')
             ->assertJsonPath('settings.nit', '123456789-0')
             ->assertJsonPath('settings.tagline', 'Educacion Agropecuaria de Excelencia')
+            ->assertJsonPath('settings.hero_description', 'Bienvenido al Portal Unico de Acceso.')
             ->assertJsonPath('settings.location', 'Pivijay, Magdalena - Colombia')
+            ->assertJsonPath('settings.name_icon', 'agriculture')
             ->assertJsonPath('settings.color_palette.primary', '#f50404');
     }
 
@@ -88,7 +102,9 @@ class EcosystemApiTest extends TestCase
         $payload = [
             'name' => 'IED Jose Maria Herrera',
             'tagline' => 'Educacion Agropecuaria de Excelencia',
+            'hero_description' => 'Bienvenido al Portal Unico de Acceso.',
             'location' => 'Pivijay, Magdalena - Colombia',
+            'name_icon' => 'school',
             'nit' => '901.000.123-4',
             'logo_url' => 'https://example.com/new-logo.png',
             'color_palette' => [
@@ -105,7 +121,9 @@ class EcosystemApiTest extends TestCase
             ->assertJsonPath('institution.name', 'IED Jose Maria Herrera')
             ->assertJsonPath('institution.settings.nit', '901.000.123-4')
             ->assertJsonPath('institution.settings.tagline', 'Educacion Agropecuaria de Excelencia')
-            ->assertJsonPath('institution.settings.location', 'Pivijay, Magdalena - Colombia');
+            ->assertJsonPath('institution.settings.hero_description', 'Bienvenido al Portal Unico de Acceso.')
+            ->assertJsonPath('institution.settings.location', 'Pivijay, Magdalena - Colombia')
+            ->assertJsonPath('institution.settings.name_icon', 'school');
 
         $this->assertDatabaseHas('institution_settings', [
             'key' => 'name',
@@ -121,8 +139,16 @@ class EcosystemApiTest extends TestCase
             'value_text' => 'Educacion Agropecuaria de Excelencia',
         ]);
         $this->assertDatabaseHas('institution_settings', [
+            'key' => 'hero_description',
+            'value_text' => 'Bienvenido al Portal Unico de Acceso.',
+        ]);
+        $this->assertDatabaseHas('institution_settings', [
             'key' => 'location',
             'value_text' => 'Pivijay, Magdalena - Colombia',
+        ]);
+        $this->assertDatabaseHas('institution_settings', [
+            'key' => 'name_icon',
+            'value_text' => 'school',
         ]);
     }
 

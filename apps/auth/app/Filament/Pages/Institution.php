@@ -51,9 +51,18 @@ class Institution extends Page implements HasForms
                 TextInput::make('tagline')
                     ->label('Eslogan')
                     ->maxLength(255),
+                Textarea::make('hero_description')
+                    ->label('Texto descriptivo (debajo del eslogan)')
+                    ->rows(3)
+                    ->maxLength(1000),
                 TextInput::make('location')
                     ->label('Ubicación')
                     ->maxLength(255),
+                TextInput::make('name_icon')
+                    ->label('Icono junto al nombre')
+                    ->maxLength(80)
+                    ->helperText('Nombre del icono de Material Symbols. Ejemplo: agriculture, school, account_balance.')
+                    ->rule('regex:/^[A-Za-z0-9_]+$/'),
                 TextInput::make('nit')
                     ->label('NIT')
                     ->required()
@@ -136,7 +145,9 @@ class Institution extends Page implements HasForms
 
         $this->upsertSetting('name', 'string', (string) ($state['name'] ?? ''), null);
         $this->upsertSetting('tagline', 'string', (string) ($state['tagline'] ?? ''), null);
+        $this->upsertSetting('hero_description', 'string', (string) ($state['hero_description'] ?? ''), null);
         $this->upsertSetting('location', 'string', (string) ($state['location'] ?? ''), null);
+        $this->upsertSetting('name_icon', 'string', (string) ($state['name_icon'] ?? ''), null);
         $this->upsertSetting('nit', 'string', (string) ($state['nit'] ?? ''), null);
         $this->upsertSetting('logo_url', 'string', (string) ($state['logo_url'] ?? ''), null);
         $this->upsertSetting('color_palette', 'json', null, $palette);
@@ -150,7 +161,7 @@ class Institution extends Page implements HasForms
     private function getFormDefaults(): array
     {
         $settings = InstitutionSetting::query()
-            ->whereIn('key', ['name', 'tagline', 'location', 'nit', 'logo_url', 'color_palette'])
+            ->whereIn('key', ['name', 'tagline', 'hero_description', 'location', 'name_icon', 'nit', 'logo_url', 'color_palette'])
             ->get()
             ->mapWithKeys(function (InstitutionSetting $setting): array {
                 if ($setting->value_json !== null) {
@@ -171,7 +182,9 @@ class Institution extends Page implements HasForms
         return [
             'name' => (string) $settings->get('name', config('sso.institution_default_name', 'Institucion')),
             'tagline' => (string) $settings->get('tagline', 'Educacion Agropecuaria de Excelencia'),
+            'hero_description' => (string) $settings->get('hero_description', 'Bienvenido al Portal Unico de Acceso. Gestiona tu informacion en un entorno seguro, moderno y eficiente disenado para nuestra comunidad educativa.'),
             'location' => (string) $settings->get('location', 'Pivijay, Magdalena - Colombia'),
+            'name_icon' => (string) $settings->get('name_icon', 'agriculture'),
             'nit' => (string) $settings->get('nit', ''),
             'logo_url' => (string) $settings->get('logo_url', ''),
             'palette' => $palette,
