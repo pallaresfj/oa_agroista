@@ -17,6 +17,9 @@ fi
 if [ "${1:-}" = "apache2-foreground" ] && [ "${PLANES_BOOTSTRAP_ON_START:-true}" = "true" ]; then
   echo "[planes] Running startup bootstrap (migrations + permissions)..."
 
+  # Ensure stale config cache from previous deploys does not hide new env/config keys.
+  php /var/www/html/artisan config:clear || true
+
   tries=0
   max_tries="${PLANES_BOOTSTRAP_MAX_TRIES:-20}"
   sleep_seconds="${PLANES_BOOTSTRAP_SLEEP_SECONDS:-3}"
@@ -38,6 +41,7 @@ if [ "${1:-}" = "apache2-foreground" ] && [ "${PLANES_BOOTSTRAP_ON_START:-true}"
   fi
 
   php /var/www/html/artisan db:seed --class=Database\\Seeders\\RolePermissionSafeSeeder --force
+  php /var/www/html/artisan config:cache || true
 fi
 
 exec "$@"
