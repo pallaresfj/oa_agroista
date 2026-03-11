@@ -1,9 +1,10 @@
-# Despliegue Paso a Paso en Dokploy: `auth` + `planes`
+# Despliegue Paso a Paso en Dokploy: `auth` + `planes` + `silo`
 
 Guia operativa desde cero para desplegar en Dokploy las apps del monorepo:
 
 - `auth` (Identity Provider SSO)
 - `planes` (cliente SSO)
+- `silo` (cliente SSO)
 
 Esta version ya viene adaptada con tus valores reales de infraestructura actual.
 
@@ -17,11 +18,14 @@ Esta version ya viene adaptada con tus valores reales de infraestructura actual.
 - Internal Host Redis actual: `redis-shared-f9kamn`
 - BD auth: `db_auth` / usuario `auth_user`
 - BD planes: `db_planes` / usuario `planes_user`
+- BD silo: `db_silo` / usuario `silo_user`
 - Dominio institucional: `iedagropivijay.edu.co`
 - Subdominio temporal auth: `oa-auth.iedagropivijay.edu.co`
 - Subdominio temporal planes: `oa-planes.iedagropivijay.edu.co`
+- Subdominio temporal silo: `oa-silo.iedagropivijay.edu.co`
 - Subdominio final auth: `auth.iedagropivijay.edu.co`
 - Subdominio final planes: `planes.iedagropivijay.edu.co`
+- Subdominio final silo: `silo.iedagropivijay.edu.co`
 
 Nota: si Dokploy regenera el internal host al recrear servicios, actualiza `DB_HOST`/`REDIS_HOST`.
 
@@ -76,7 +80,7 @@ Resultado esperado: servicio en running.
 
 ---
 
-## 5) Crear BD y usuario de `planes` en MySQL
+## 5) Crear BD y usuario de `planes` y `silo` en MySQL
 
 1. Entrar a `mysql-shared` -> `Open Terminal`.
 2. Ejecutar:
@@ -89,16 +93,19 @@ mysql -u root -p
 
 ```sql
 CREATE DATABASE IF NOT EXISTS db_planes CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS db_silo CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE USER IF NOT EXISTS 'planes_user'@'%' IDENTIFIED BY 'CAMBIAR_PASSWORD_PLANES';
+CREATE USER IF NOT EXISTS 'silo_user'@'%' IDENTIFIED BY 'CAMBIAR_PASSWORD_SILO';
 
 GRANT ALL PRIVILEGES ON db_auth.* TO 'auth_user'@'%';
 GRANT ALL PRIVILEGES ON db_planes.* TO 'planes_user'@'%';
+GRANT ALL PRIVILEGES ON db_silo.* TO 'silo_user'@'%';
 
 FLUSH PRIVILEGES;
 
 SHOW DATABASES;
-SELECT user, host FROM mysql.user WHERE user IN ('auth_user','planes_user');
+SELECT user, host FROM mysql.user WHERE user IN ('auth_user','planes_user','silo_user');
 ```
 
 ---
@@ -109,6 +116,7 @@ Crear registros `A` hacia la IP publica del VPS:
 
 - `oa-auth.iedagropivijay.edu.co`
 - `oa-planes.iedagropivijay.edu.co`
+- `oa-silo.iedagropivijay.edu.co`
 
 Esperar propagacion DNS.
 
@@ -239,33 +247,124 @@ Importante:
 
 ---
 
-## 10) Validacion funcional minima
+## 10) Crear cliente OAuth de `silo` en `auth`
 
-1. Entrar a `https://oa-planes.iedagropivijay.edu.co/admin`.
-2. Login SSO redirige a `oa-auth` y vuelve a `oa-planes`.
-3. Usuario soporte `pallaresfj@iedagropivijay.edu.co` entra con menu completo.
-4. Logout desde auth cierra sesion en planes.
+En `auth-web`:
+
+```bash
+cd /var/www/html
+php artisan passport:client --name="Silo Dokploy" --redirect_uri="https://oa-silo.iedagropivijay.edu.co/sso/callback,https://oa-silo.iedagropivijay.edu.co/sso/session-check/callback"
+```
+
+### 10.1 Datos exactos del cliente `silo` (temporal y final)
+
+Usar estos valores para evitar errores de callback/logout:
+
+- Redirect URIs:
+  - Temporal:
+    - `https://oa-silo.iedagropivijay.edu.co/sso/callback`
+    - `https://oa-silo.iedagropivijay.edu.co/sso/session-check/callback`
+  - Final (cutover):
+    - `https://silo.iedagropivijay.edu.co/sso/callback`
+    - `https://silo.iedagropivijay.edu.co/sso/session-check/callback`
+- Frontchannel logout URIs:
+  - Temporal: `https://oa-silo.iedagropivijay.edu.co/sso/frontchannel-logout`
+  - Final (cutover): `https://silo.iedagropivijay.edu.co/sso/frontchannel-logout`
+- Scopes permitidos:
+  - `openid`
+  - `email`
+  - `profile`
+  - Formato en `.env`: `SSO_SCOPES="openid email profile"`
+
+Guardar:
+
+- `Client ID`
+- `Client Secret`
+
+Luego actualizar en env de auth:
+
+- `SILO_CLIENT_ID`
+- `SILO_CLIENT_SECRET`
+
+Y en env de silo:
+
+- `SSO_CLIENT_ID`
+- `SSO_CLIENT_SECRET`
 
 ---
 
-## 11) Cutover a subdominios finales (cuando decidas)
+## 11) Crear y desplegar app `silo`
+
+### 11.1 Crear servicio
+
+1. `Create Service` -> `Application` (o `Compose`, segun tu version de Dokploy).
+2. Repo: `github.com/pallaresfj/oa_agroista.git`.
+3. Compose path: `apps/silo/docker-compose.dokploy.yml`.
+4. Servicio publico `web` puerto `80`.
+5. Domain: `oa-silo.iedagropivijay.edu.co`.
+6. Activar HTTPS automatico.
+
+### 11.2 Cargar variables
+
+Pegar el `.env` completo de `SILO` de la seccion final.
+
+Importante:
+
+- `SILO_BOOTSTRAP_ON_START=true`
+- `DB_DATABASE=db_silo`
+- `DB_USERNAME=silo_user`
+
+### 11.3 Deploy
+
+1. Pulsar `Deploy`.
+2. Esperar `web`, `queue`, `scheduler` en running.
+
+`silo` ejecuta bootstrap automatico al iniciar `web` (`migrate` + seed de roles/permisos + seed de soporte).
+
+### 11.4 Verificar salud
+
+- `https://oa-silo.iedagropivijay.edu.co/up`
+
+---
+
+## 12) Validacion funcional minima
+
+1. Entrar a `https://oa-planes.iedagropivijay.edu.co/admin`.
+2. Login SSO redirige a `oa-auth` y vuelve a `oa-planes`.
+3. Entrar a `https://oa-silo.iedagropivijay.edu.co/admin`.
+4. Login SSO redirige a `oa-auth` y vuelve a `oa-silo`.
+5. Usuario soporte `pallaresfj@iedagropivijay.edu.co` entra en ambas apps.
+6. Logout desde auth cierra sesion en planes y silo.
+
+---
+
+## 13) Cutover a subdominios finales (cuando decidas)
 
 Cuando todo este aprobado en `oa-*`:
 
 1. Configurar DNS final:
    - `auth.iedagropivijay.edu.co`
    - `planes.iedagropivijay.edu.co`
+   - `silo.iedagropivijay.edu.co`
 2. Cambiar dominios en Dokploy.
-3. Actualizar variables de `APP_URL`, `PLANES_BASE_URL`, `SSO_*`, `AUTH_API_BASE`.
-4. Crear/actualizar cliente OAuth de planes con redirect final:
+3. Actualizar variables de `APP_URL`, `PLANES_BASE_URL`, `SILO_BASE_URL`, `SSO_*`, `AUTH_API_BASE`.
+4. Crear/actualizar cliente OAuth de planes con redirects finales:
    - `https://planes.iedagropivijay.edu.co/sso/callback`
-5. Redeploy en orden:
+   - `https://planes.iedagropivijay.edu.co/sso/session-check/callback`
+5. Crear/actualizar cliente OAuth de silo con redirects finales:
+   - `https://silo.iedagropivijay.edu.co/sso/callback`
+   - `https://silo.iedagropivijay.edu.co/sso/session-check/callback`
+6. Actualizar frontchannel logout URIs finales en auth:
+   - `planes|https://planes.iedagropivijay.edu.co/sso/frontchannel-logout`
+   - `silo|https://silo.iedagropivijay.edu.co/sso/frontchannel-logout`
+7. Redeploy en orden:
    - primero `auth`
    - luego `planes`
+   - luego `silo`
 
 ---
 
-## 12) .env completo AUTH (temporal oa-auth)
+## 14) .env completo AUTH (temporal oa-auth)
 
 Pega este bloque en Environment del servicio `auth` en Dokploy:
 
@@ -350,19 +449,19 @@ PLANES_CLIENT_SECRET=PEGAR_CLIENT_SECRET_PLANES
 ASISTENCIA_BASE_URL=
 ASISTENCIA_CLIENT_ID=
 ASISTENCIA_CLIENT_SECRET=
-SILO_BASE_URL=
-SILO_CLIENT_ID=
-SILO_CLIENT_SECRET=
+SILO_BASE_URL=https://oa-silo.iedagropivijay.edu.co
+SILO_CLIENT_ID=PEGAR_CLIENT_ID_SILO
+SILO_CLIENT_SECRET=PEGAR_CLIENT_SECRET_SILO
 
 TOKEN_TTL_MINUTES=30
 REFRESH_TOKEN_TTL_DAYS=14
 
-CORS_ALLOWED_ORIGINS=https://oa-planes.iedagropivijay.edu.co
-SSO_ALLOWED_REDIRECT_HOSTS=oa-planes.iedagropivijay.edu.co,oa-auth.iedagropivijay.edu.co
+CORS_ALLOWED_ORIGINS=https://oa-planes.iedagropivijay.edu.co,https://oa-silo.iedagropivijay.edu.co
+SSO_ALLOWED_REDIRECT_HOSTS=oa-planes.iedagropivijay.edu.co,oa-silo.iedagropivijay.edu.co,oa-auth.iedagropivijay.edu.co
 SSO_INSECURE_REDIRECT_HOSTS=
-SSO_POST_LOGOUT_REDIRECT_HOSTS=oa-planes.iedagropivijay.edu.co,oa-auth.iedagropivijay.edu.co
-SSO_FRONTCHANNEL_LOGOUT_CLIENTS=planes|https://oa-planes.iedagropivijay.edu.co/sso/frontchannel-logout
-SSO_FRONTCHANNEL_LOGOUT_SECRETS=planes|PEGAR_SECRET_FRONTCHANNEL_PLANES
+SSO_POST_LOGOUT_REDIRECT_HOSTS=oa-planes.iedagropivijay.edu.co,oa-silo.iedagropivijay.edu.co,oa-auth.iedagropivijay.edu.co
+SSO_FRONTCHANNEL_LOGOUT_CLIENTS=planes|https://oa-planes.iedagropivijay.edu.co/sso/frontchannel-logout,silo|https://oa-silo.iedagropivijay.edu.co/sso/frontchannel-logout
+SSO_FRONTCHANNEL_LOGOUT_SECRETS=planes|PEGAR_SECRET_FRONTCHANNEL_PLANES,silo|PEGAR_SECRET_FRONTCHANNEL_SILO
 SSO_FRONTCHANNEL_LOGOUT_TTL_SECONDS=120
 
 GOOGLE_LOGOUT_FROM_BROWSER=true
@@ -373,7 +472,7 @@ GOOGLE_SESSION_CHECK_TIMEOUT_SECONDS=8
 
 ---
 
-## 13) .env completo PLANES (temporal oa-planes)
+## 15) .env completo PLANES (temporal oa-planes)
 
 Pega este bloque en Environment del servicio `planes` en Dokploy:
 
@@ -435,6 +534,7 @@ SSO_CLIENT_ID=PEGAR_CLIENT_ID_PLANES
 SSO_CLIENT_SECRET=PEGAR_CLIENT_SECRET_PLANES
 SSO_SUPPORT_EMAILS=pallaresfj@iedagropivijay.edu.co
 SSO_REDIRECT_URI=https://oa-planes.iedagropivijay.edu.co/sso/callback
+SSO_SESSION_CHECK_REDIRECT_URI=https://oa-planes.iedagropivijay.edu.co/sso/session-check/callback
 SSO_SCOPES="openid email profile"
 SSO_PROMPT=login
 SSO_SESSION_CHECK_ENABLED=true
@@ -446,7 +546,7 @@ SSO_CLIENT_KEY=planes
 SSO_FRONTCHANNEL_LOGOUT_CLIENT_KEY=planes
 SSO_FRONTCHANNEL_LOGOUT_SECRET=PEGAR_SECRET_FRONTCHANNEL_PLANES
 SSO_FRONTCHANNEL_LOGOUT_TTL_SECONDS=120
-SSO_FRONTCHANNEL_LOGOUT_NEXT_HOSTS=oa-auth.iedagropivijay.edu.co,oa-planes.iedagropivijay.edu.co,accounts.google.com,appengine.google.com
+SSO_FRONTCHANNEL_LOGOUT_NEXT_HOSTS=oa-auth.iedagropivijay.edu.co,oa-planes.iedagropivijay.edu.co,oa-silo.iedagropivijay.edu.co,accounts.google.com,appengine.google.com
 SSO_HTTP_TIMEOUT=10
 AUTH_API_BASE=https://oa-auth.iedagropivijay.edu.co/api/ecosystem
 
@@ -457,7 +557,114 @@ PLANES_BOOTSTRAP_SLEEP_SECONDS=3
 
 ---
 
-## 14) Comando rapido para generar APP_KEY
+## 16) .env completo SILO (temporal oa-silo)
+
+Pega este bloque en Environment del servicio `silo` en Dokploy:
+
+```env
+APP_NAME="SILO"
+APP_ENV=production
+APP_KEY=PEGAR_APP_KEY_SILO
+APP_DEBUG=false
+APP_URL=https://oa-silo.iedagropivijay.edu.co
+
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=es
+APP_FAKER_LOCALE=es_ES
+APP_MAINTENANCE_DRIVER=file
+
+LOG_CHANNEL=stderr
+LOG_STACK=single
+LOG_LEVEL=info
+
+DB_CONNECTION=mysql
+DB_HOST=mysql-shared-goni44
+DB_PORT=3306
+DB_DATABASE=db_silo
+DB_USERNAME=silo_user
+DB_PASSWORD=PEGAR_PASSWORD_SILO_USER
+
+SESSION_DRIVER=redis
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_COOKIE=oa_silo_session
+SESSION_PATH=/
+SESSION_DOMAIN=
+SESSION_SECURE_COOKIE=true
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=public
+QUEUE_CONNECTION=redis
+CACHE_STORE=redis
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=redis-shared-f9kamn
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+REDIS_PREFIX=silo_
+
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="noreply@iedagropivijay.edu.co"
+MAIL_FROM_NAME="${APP_NAME}"
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=https://oa-silo.iedagropivijay.edu.co/auth/google/callback
+GOOGLE_ALLOWED_DOMAIN=iedagropivijay.edu.co
+GOOGLE_LOGOUT_FROM_BROWSER=false
+
+GOOGLE_DRIVE_TYPE=service_account
+GOOGLE_DRIVE_PROJECT_ID=
+GOOGLE_DRIVE_PRIVATE_KEY_ID=
+GOOGLE_DRIVE_PRIVATE_KEY=
+GOOGLE_DRIVE_CLIENT_EMAIL=
+GOOGLE_DRIVE_CLIENT_ID=
+GOOGLE_DRIVE_FOLDER_ID=
+GOOGLE_DRIVE_TEMPLATE_DOCUMENT_ID=
+GOOGLE_DRIVE_TEMPLATE_SPREADSHEET_ID=
+GOOGLE_DRIVE_TEMPLATE_PRESENTATION_ID=
+GOOGLE_WORKSPACE_ADMIN_EMAIL=
+GOOGLE_WORKSPACE_CUSTOMER=my_customer
+GOOGLE_WORKSPACE_VALIDATE_USERS_ON_CREATE=true
+
+DRIVE_SYNC_ENABLED=true
+DRIVE_SYNC_NOTIFY=true
+DRIVE_SYNC_NOTIFY_ROLES=soporte,directivo
+DRIVE_SYNC_BOOTSTRAP_ON_EMPTY_STATE=true
+
+SILO_BOOTSTRAP_ON_START=true
+SILO_BOOTSTRAP_MAX_TRIES=20
+SILO_BOOTSTRAP_SLEEP_SECONDS=3
+
+SSO_DISCOVERY_URL=https://oa-auth.iedagropivijay.edu.co/.well-known/openid-configuration
+SSO_ISSUER=https://oa-auth.iedagropivijay.edu.co
+SSO_CLIENT_ID=PEGAR_CLIENT_ID_SILO
+SSO_CLIENT_SECRET=PEGAR_CLIENT_SECRET_SILO
+INSTITUTION_CODE=institucionx
+SSO_REDIRECT_URI=https://oa-silo.iedagropivijay.edu.co/sso/callback
+SSO_SESSION_CHECK_REDIRECT_URI=https://oa-silo.iedagropivijay.edu.co/sso/session-check/callback
+SSO_SCOPES="openid email profile"
+SSO_PROMPT=login
+SSO_SESSION_CHECK_ENABLED=true
+SSO_SESSION_CHECK_INTERVAL_SECONDS=60
+SSO_SESSION_CHECK_PROMPT=none
+SSO_IDP_LOGOUT_URL=https://oa-auth.iedagropivijay.edu.co/logout
+SSO_FRONTCHANNEL_LOGOUT_CLIENT_KEY=silo
+SSO_FRONTCHANNEL_LOGOUT_SECRET=PEGAR_SECRET_FRONTCHANNEL_SILO
+SSO_FRONTCHANNEL_LOGOUT_TTL_SECONDS=120
+SSO_FRONTCHANNEL_LOGOUT_NEXT_HOSTS=oa-auth.iedagropivijay.edu.co,oa-silo.iedagropivijay.edu.co,oa-planes.iedagropivijay.edu.co,oa-asistencia.iedagropivijay.edu.co,accounts.google.com,appengine.google.com
+SSO_HTTP_TIMEOUT=10
+AUTH_API_BASE=https://oa-auth.iedagropivijay.edu.co/api/ecosystem
+```
+
+---
+
+## 17) Comando rapido para generar APP_KEY
 
 Puedes generar una key asi:
 
@@ -465,4 +672,4 @@ Puedes generar una key asi:
 php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ```
 
-Usa una para `auth` y otra distinta para `planes`.
+Usa una para `auth`, otra para `planes` y otra para `silo`.
