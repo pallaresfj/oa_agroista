@@ -171,4 +171,11 @@ class RoleResource extends Resource
     {
         return 5;
     }
+
+    public static function isScopedToTenant(): bool
+    {
+        // Roles in this app are global (Spatie teams/tenancy disabled),
+        // so tenant scoping can hide valid roles like "Soporte" from listings.
+        return false;
+    }
 }
