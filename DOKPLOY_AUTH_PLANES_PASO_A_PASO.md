@@ -169,6 +169,22 @@ cd /var/www/html
 php artisan passport:client --name="Planes Dokploy" --redirect_uri="https://oa-planes.iedagropivijay.edu.co/sso/callback"
 ```
 
+### 8.1 Datos exactos del cliente `planes` (temporal y final)
+
+Usar estos valores para evitar errores de callback/logout:
+
+- Redirect URIs:
+  - Temporal: `https://oa-planes.iedagropivijay.edu.co/sso/callback`
+  - Final (cutover): `https://planes.iedagropivijay.edu.co/sso/callback`
+- Frontchannel logout URIs:
+  - Temporal: `https://oa-planes.iedagropivijay.edu.co/sso/frontchannel-logout`
+  - Final (cutover): `https://planes.iedagropivijay.edu.co/sso/frontchannel-logout`
+- Scopes permitidos:
+  - `openid`
+  - `email`
+  - `profile`
+  - Formato en `.env`: `SSO_SCOPES="openid email profile"`
+
 Guardar:
 
 - `Client ID`
