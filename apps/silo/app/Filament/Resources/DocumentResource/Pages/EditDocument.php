@@ -118,7 +118,10 @@ class EditDocument extends EditRecord
                 Notification::make()
                     ->danger()
                     ->title('No se pudo actualizar el documento')
-                    ->body('No pudimos crear el documento en Google Drive. Intenta nuevamente.')
+                    ->body($this->resolveDriveUserMessage(
+                        $e,
+                        'No pudimos crear el documento en Google Drive. Intenta nuevamente.'
+                    ))
                     ->persistent()
                     ->send();
 
@@ -181,7 +184,10 @@ class EditDocument extends EditRecord
                     Notification::make()
                         ->danger()
                         ->title('No se pudo actualizar el documento')
-                        ->body('No pudimos completar la carga del archivo. Intenta nuevamente.')
+                        ->body($this->resolveDriveUserMessage(
+                            $e,
+                            'No pudimos completar la carga del archivo. Intenta nuevamente.'
+                        ))
                         ->persistent()
                         ->send();
 

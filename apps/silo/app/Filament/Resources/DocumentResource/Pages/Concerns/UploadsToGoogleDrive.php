@@ -10,9 +10,44 @@ use App\Support\GoogleDriveHelper;
 use Google\Service\Exception as GoogleServiceException;
 use Google\Service\Drive\DriveFile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 trait UploadsToGoogleDrive
 {
+    protected function resolveDriveUserMessage(\Throwable $e, string $fallbackMessage): string
+    {
+        $rawMessage = trim($e->getMessage());
+
+        if ($rawMessage === '') {
+            return $fallbackMessage;
+        }
+
+        $normalized = Str::lower($rawMessage);
+
+        if (
+            Str::contains($normalized, 'service account not configured')
+            || Str::contains($normalized, 'google_drive_private_key')
+        ) {
+            return 'Google Drive no está configurado en este entorno. '
+                .'Define GOOGLE_DRIVE_PRIVATE_KEY, GOOGLE_DRIVE_CLIENT_EMAIL y GOOGLE_DRIVE_CLIENT_ID en .env.';
+        }
+
+        if (Str::contains($normalized, 'google_drive_folder_id')) {
+            return 'Falta configurar GOOGLE_DRIVE_FOLDER_ID en .env con una carpeta válida en Google Drive.';
+        }
+
+        if (
+            Str::contains($normalized, 'storagequotaexceeded')
+            || Str::contains($normalized, 'shared drive')
+            || Str::contains($normalized, 'rechazo la creacion')
+            || Str::contains($normalized, 'rechazó la subida')
+        ) {
+            return $rawMessage;
+        }
+
+        return $fallbackMessage;
+    }
+
     /**
      * Normalize Filament/Livewire attachment payloads to a local storage path.
      */
