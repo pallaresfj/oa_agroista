@@ -26,7 +26,7 @@ class GoogleDriveHelper
             'type' => $config['type'] ?? 'service_account',
             'project_id' => $config['project_id'] ?? '',
             'private_key_id' => $config['private_key_id'] ?? '',
-            'private_key' => str_replace('\\n', "\n", $privateKey),
+            'private_key' => static::normalizePrivateKey((string) $privateKey),
             'client_email' => $config['client_email'] ?? '',
             'client_id' => $config['client_id'] ?? '',
             'auth_uri' => 'https://accounts.google.com/o/oauth2/auth',
@@ -34,6 +34,38 @@ class GoogleDriveHelper
         ]);
 
         return new Drive($client);
+    }
+
+    public static function normalizePrivateKey(string $privateKey): string
+    {
+        $normalized = trim(str_replace("\r", '', $privateKey));
+
+        if ($normalized === '') {
+            return '';
+        }
+
+        // Support dotenv values stored as escaped newlines.
+        $normalized = str_replace('\\n', "\n", $normalized);
+
+        // Support single-line PEM values used in some deployment UIs.
+        if (! str_contains($normalized, "\n")) {
+            $matches = [];
+            $hasSingleLinePem = preg_match(
+                '/^-----BEGIN ([A-Z ]*PRIVATE KEY)-----(.+)-----END \\1-----$/',
+                $normalized,
+                $matches
+            ) === 1;
+
+            if ($hasSingleLinePem) {
+                $label = trim((string) ($matches[1] ?? 'PRIVATE KEY'));
+                $body = preg_replace('/\s+/', '', (string) ($matches[2] ?? ''));
+                $wrappedBody = trim(chunk_split((string) $body, 64, "\n"));
+
+                $normalized = "-----BEGIN {$label}-----\n{$wrappedBody}\n-----END {$label}-----\n";
+            }
+        }
+
+        return $normalized;
     }
 
     public static function getRootFolderId(): string

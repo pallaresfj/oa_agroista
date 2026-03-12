@@ -18,4 +18,24 @@ class GoogleDriveHelperTest extends TestCase
         $this->assertSame('SECRETARIA_ACADEMICA', GoogleDriveHelper::normalizeEntityFolderName('Secretaría Académica'));
         $this->assertSame('SIN_ENTIDAD', GoogleDriveHelper::normalizeEntityFolderName(''));
     }
+
+    public function test_it_normalizes_escaped_newlines_in_private_key_values(): void
+    {
+        $input = '-----BEGIN PRIVATE KEY-----\\nABCDEF\\n-----END PRIVATE KEY-----\\n';
+        $normalized = GoogleDriveHelper::normalizePrivateKey($input);
+
+        $this->assertStringContainsString("-----BEGIN PRIVATE KEY-----\nABCDEF\n-----END PRIVATE KEY-----", $normalized);
+        $this->assertStringNotContainsString('\\n', $normalized);
+    }
+
+    public function test_it_rebuilds_single_line_private_key_values(): void
+    {
+        $body = str_repeat('A', 80);
+        $input = "-----BEGIN PRIVATE KEY-----{$body}-----END PRIVATE KEY-----";
+        $normalized = GoogleDriveHelper::normalizePrivateKey($input);
+
+        $this->assertStringStartsWith("-----BEGIN PRIVATE KEY-----\n", $normalized);
+        $this->assertStringContainsString("\n-----END PRIVATE KEY-----\n", $normalized);
+        $this->assertGreaterThanOrEqual(3, substr_count($normalized, "\n"));
+    }
 }

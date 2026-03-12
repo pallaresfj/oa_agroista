@@ -95,7 +95,7 @@ class AppServiceProvider extends ServiceProvider
                     'type' => $config['type'] ?? 'service_account',
                     'project_id' => $config['project_id'] ?? '',
                     'private_key_id' => $config['private_key_id'] ?? '',
-                    'private_key' => str_replace('\\n', "\n", $privateKey),
+                    'private_key' => GoogleDriveHelper::normalizePrivateKey((string) $privateKey),
                     'client_email' => $config['client_email'] ?? '',
                     'client_id' => $config['client_id'] ?? '',
                     'auth_uri' => 'https://accounts.google.com/o/oauth2/auth',
