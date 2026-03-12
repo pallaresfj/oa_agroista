@@ -423,7 +423,8 @@ class DocumentResource extends Resource
                 Action::make('openDrive')
                     ->label('Abrir en Drive')
                     ->icon('heroicon-o-arrow-top-right-on-square')
-                    ->button()
+                    ->iconButton()
+                    ->hiddenLabel()
                     ->tooltip('Abrir en Drive')
                     ->url(
                         fn (Document $record): ?string => $record->resolveOpenUrlForCurrentUser(),
@@ -434,7 +435,8 @@ class DocumentResource extends Resource
                 Action::make('preview')
                     ->label('Vista Previa')
                     ->icon('heroicon-o-eye')
-                    ->button()
+                    ->iconButton()
+                    ->hiddenLabel()
                     ->tooltip('Vista previa')
                     ->modalHeading(fn($record): string => $record->title)
                     ->modalContent(fn($record) => view('filament.resources.document-resource.preview', [
@@ -444,14 +446,16 @@ class DocumentResource extends Resource
                     ->visible(fn($record): bool => filled($record->resolveOpenUrlForCurrentUser())),
 
                 EditAction::make()
-                    ->button()
+                    ->iconButton()
+                    ->hiddenLabel()
                     ->tooltip('Editar'),
 
                 DeleteAction::make()
                     ->label('Archivar')
                     ->icon('heroicon-o-archive-box')
                     ->color('warning')
-                    ->button()
+                    ->iconButton()
+                    ->hiddenLabel()
                     ->tooltip('Archivar')
                     ->modalHeading('Archivar documento')
                     ->modalDescription('El documento se ocultará de la lista activa, pero el archivo seguirá disponible en Google Drive.')
@@ -460,7 +464,8 @@ class DocumentResource extends Resource
 
                 ForceDeleteAction::make()
                     ->label('Eliminar definitivamente')
-                    ->button()
+                    ->iconButton()
+                    ->hiddenLabel()
                     ->tooltip('Eliminar definitivamente')
                     ->modalHeading('Eliminar documento definitivamente')
                     ->modalDescription('Esta acción eliminará el registro y el archivo en Google Drive. No se puede deshacer.')
@@ -490,7 +495,8 @@ class DocumentResource extends Resource
                         $action->success();
                     }),
                 RestoreAction::make()
-                    ->button()
+                    ->iconButton()
+                    ->hiddenLabel()
                     ->tooltip('Restaurar'),
             ])
             ->bulkActions([
