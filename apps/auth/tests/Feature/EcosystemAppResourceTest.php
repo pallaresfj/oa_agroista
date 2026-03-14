@@ -19,7 +19,7 @@ class EcosystemAppResourceTest extends TestCase
             'slug' => 'cliente-prueba',
             'base_url' => 'https://oa-silo.test',
             'redirect_uris' => "http://localhost/callback,\nhttps://oa-silo.test/sso/callback",
-            'frontchannel_logout_uris' => "http://localhost/frontchannel-logout",
+            'frontchannel_logout_uris' => 'http://localhost/frontchannel-logout',
             'scopes' => "openid,email\nprofile",
             'is_active' => true,
             'revoked' => false,

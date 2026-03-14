@@ -8,9 +8,7 @@ use Laravel\Passport\Events\AccessTokenCreated;
 
 class LogAccessTokenCreated
 {
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function handle(AccessTokenCreated $event): void
     {

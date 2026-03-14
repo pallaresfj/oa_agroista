@@ -16,12 +16,14 @@ Route::get('/', function () {
     $iconBySlug = [
         'planes' => 'school',
         'asistencia' => 'assignment_ind',
+        'lectura' => 'menu_book',
         'silo' => 'folder_managed',
     ];
 
     $descriptionBySlug = [
         'planes' => 'Plataforma integral de planeacion estrategica y seguimiento escolar.',
         'asistencia' => 'Sistema de control de asistencia docente y registro de actividades diarias.',
+        'lectura' => 'Plataforma para medir velocidad lectora, registrar errores y seguir la evolucion de cada estudiante.',
         'silo' => 'Sistema de gestion documental para la administracion eficiente de archivos.',
     ];
 

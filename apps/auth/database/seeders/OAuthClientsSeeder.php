@@ -42,6 +42,21 @@ class OAuthClientsSeeder extends Seeder
                 'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
             ],
             [
+                'slug' => 'lectura',
+                'name' => 'Lectura',
+                'client_id' => (string) env('LECTURA_CLIENT_ID', '01959ac7-e4e5-72d7-b0a7-9afc2ec6d7b1'),
+                'client_secret' => (string) env('LECTURA_CLIENT_SECRET', 'lectura-local-secret'),
+                'base_url' => (string) env('LECTURA_BASE_URL', 'https://oa-lectura.test'),
+                'redirect_uris' => [
+                    (string) env('LECTURA_REDIRECT_URI', 'https://oa-lectura.test/sso/callback'),
+                    'https://oa-lectura.test/sso/session-check/callback',
+                ],
+                'frontchannel_logout_uris' => [
+                    (string) env('LECTURA_FRONTCHANNEL_LOGOUT_URI', 'https://oa-lectura.test/sso/frontchannel-logout'),
+                ],
+                'scopes' => ['openid', 'email', 'profile', 'ecosystem.read'],
+            ],
+            [
                 'slug' => 'silo',
                 'name' => 'Silo',
                 'client_id' => (string) env('SILO_CLIENT_ID', '019ccb79-6289-724c-9fdf-fb486d4a3545'),
@@ -78,7 +93,7 @@ class OAuthClientsSeeder extends Seeder
             }
 
             if (! $client) {
-                $client = new OAuthClient();
+                $client = new OAuthClient;
                 $client->id = $configuredId !== '' ? $configuredId : (string) Str::uuid();
             }
 

@@ -3,8 +3,8 @@
 namespace App\Providers;
 
 use App\Models\OAuthClient;
-use Laravel\Passport\Passport;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Passport\Passport;
 
 class AuthServiceProvider extends ServiceProvider
 {

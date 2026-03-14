@@ -24,6 +24,7 @@ jobs:
       auth: ${{ steps.filter.outputs.auth }}
       planes: ${{ steps.filter.outputs.planes }}
       asistencia: ${{ steps.filter.outputs.asistencia }}
+      lectura: ${{ steps.filter.outputs.lectura }}
       silo: ${{ steps.filter.outputs.silo }}
     steps:
       - name: Checkout
@@ -46,6 +47,10 @@ jobs:
               - '.github/workflows/**'
             asistencia:
               - 'apps/asistencia/**'
+              - 'core/**'
+              - '.github/workflows/**'
+            lectura:
+              - 'apps/lectura/**'
               - 'core/**'
               - '.github/workflows/**'
             silo:
@@ -82,6 +87,16 @@ jobs:
       app_name: asistencia
     secrets:
       dokploy_webhook: ${{ secrets.DOKPLOY_WEBHOOK_ASISTENCIA }}
+
+  deploy-lectura:
+    name: Deploy lectura
+    needs: changes
+    if: needs.changes.outputs.lectura == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/reusable-app-deploy.yml
+    with:
+      app_name: lectura
+    secrets:
+      dokploy_webhook: ${{ secrets.DOKPLOY_WEBHOOK_LECTURA }}
 
   deploy-silo:
     name: Deploy silo

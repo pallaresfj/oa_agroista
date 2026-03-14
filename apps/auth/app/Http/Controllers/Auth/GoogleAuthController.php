@@ -24,9 +24,7 @@ class GoogleAuthController extends Controller
 
     private const SESSION_CHECK_LAST_AT = 'google_session_check.last_checked_at';
 
-    public function __construct(private readonly AuditLogger $auditLogger)
-    {
-    }
+    public function __construct(private readonly AuditLogger $auditLogger) {}
 
     public function login(): RedirectResponse
     {

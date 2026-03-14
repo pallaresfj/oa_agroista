@@ -1,0 +1,138 @@
+x-laravel-env: &laravel-env
+  APP_NAME: ${APP_NAME}
+  APP_ENV: ${APP_ENV}
+  APP_KEY: ${APP_KEY}
+  APP_DEBUG: ${APP_DEBUG}
+  APP_URL: ${APP_URL}
+  APP_LOCALE: ${APP_LOCALE}
+  APP_FALLBACK_LOCALE: ${APP_FALLBACK_LOCALE}
+  APP_FAKER_LOCALE: ${APP_FAKER_LOCALE}
+  APP_MAINTENANCE_DRIVER: ${APP_MAINTENANCE_DRIVER}
+
+  LOG_CHANNEL: stderr
+  LOG_STACK: single
+  LOG_LEVEL: ${LOG_LEVEL}
+
+  DB_CONNECTION: mysql
+  DB_HOST: ${DB_HOST}
+  DB_PORT: ${DB_PORT}
+  DB_DATABASE: ${DB_DATABASE}
+  DB_USERNAME: ${DB_USERNAME}
+  DB_PASSWORD: ${DB_PASSWORD}
+
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: ${SESSION_LIFETIME}
+  SESSION_ENCRYPT: "false"
+  SESSION_COOKIE: ${SESSION_COOKIE}
+  SESSION_PATH: ${SESSION_PATH}
+  SESSION_DOMAIN: ${SESSION_DOMAIN}
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE}
+
+  BROADCAST_CONNECTION: log
+  FILESYSTEM_DISK: ${FILESYSTEM_DISK}
+  QUEUE_CONNECTION: redis
+  CACHE_STORE: redis
+
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: ${REDIS_HOST}
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_PREFIX: ${REDIS_PREFIX}
+
+  MAIL_MAILER: ${MAIL_MAILER}
+  MAIL_SCHEME: ${MAIL_SCHEME}
+  MAIL_HOST: ${MAIL_HOST}
+  MAIL_PORT: ${MAIL_PORT}
+  MAIL_USERNAME: ${MAIL_USERNAME}
+  MAIL_PASSWORD: ${MAIL_PASSWORD}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME}
+
+  SSO_DISCOVERY_URL: ${SSO_DISCOVERY_URL}
+  SSO_ISSUER: ${SSO_ISSUER}
+  SSO_CLIENT_ID: ${SSO_CLIENT_ID}
+  SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET}
+  INSTITUTION_CODE: ${INSTITUTION_CODE}
+  SSO_REDIRECT_URI: ${SSO_REDIRECT_URI}
+  SSO_SCOPES: ${SSO_SCOPES}
+  SSO_SESSION_CHECK_ENABLED: ${SSO_SESSION_CHECK_ENABLED}
+  SSO_SESSION_WATCHDOG_ENABLED: ${SSO_SESSION_WATCHDOG_ENABLED}
+  SSO_SESSION_WATCHDOG_INTERVAL_SECONDS: ${SSO_SESSION_WATCHDOG_INTERVAL_SECONDS}
+  SSO_IDP_LOGOUT_URL: ${SSO_IDP_LOGOUT_URL}
+  SSO_FRONTCHANNEL_LOGOUT_CLIENT_KEY: ${SSO_FRONTCHANNEL_LOGOUT_CLIENT_KEY}
+  SSO_FRONTCHANNEL_LOGOUT_SECRET: ${SSO_FRONTCHANNEL_LOGOUT_SECRET}
+  SSO_FRONTCHANNEL_LOGOUT_TTL_SECONDS: ${SSO_FRONTCHANNEL_LOGOUT_TTL_SECONDS}
+  SSO_FRONTCHANNEL_LOGOUT_NEXT_HOSTS: ${SSO_FRONTCHANNEL_LOGOUT_NEXT_HOSTS}
+  SSO_HTTP_TIMEOUT: ${SSO_HTTP_TIMEOUT}
+  AUTH_API_BASE: ${AUTH_API_BASE}
+  LECTURA_ADMIN_EMAIL: ${LECTURA_ADMIN_EMAIL}
+  LECTURA_BOOTSTRAP_ON_START: ${LECTURA_BOOTSTRAP_ON_START}
+  LECTURA_BOOTSTRAP_MAX_TRIES: ${LECTURA_BOOTSTRAP_MAX_TRIES}
+  LECTURA_BOOTSTRAP_SLEEP_SECONDS: ${LECTURA_BOOTSTRAP_SLEEP_SECONDS}
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    restart: unless-stopped
+    environment:
+      <<: *laravel-env
+    expose:
+      - "80"
+    volumes:
+      - laravel_storage:/var/www/html/storage
+      - laravel_cache:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost/up || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    restart: unless-stopped
+    environment:
+      <<: *laravel-env
+    depends_on:
+      web:
+        condition: service_started
+    command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--timeout=120", "--max-jobs=500"]
+    volumes:
+      - laravel_storage:/var/www/html/storage
+      - laravel_cache:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    restart: unless-stopped
+    environment:
+      <<: *laravel-env
+    depends_on:
+      web:
+        condition: service_started
+    command: ["sh", "-lc", "while true; do php artisan schedule:run --verbose --no-interaction; sleep 60; done"]
+    volumes:
+      - laravel_storage:/var/www/html/storage
+      - laravel_cache:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
+
+volumes:
+  laravel_storage:
+  laravel_cache:
+
+networks:
+  dokploy-network:
+    external: true

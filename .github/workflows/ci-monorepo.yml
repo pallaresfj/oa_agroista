@@ -29,6 +29,7 @@ jobs:
       auth: ${{ steps.filter.outputs.auth }}
       planes: ${{ steps.filter.outputs.planes }}
       asistencia: ${{ steps.filter.outputs.asistencia }}
+      lectura: ${{ steps.filter.outputs.lectura }}
       silo: ${{ steps.filter.outputs.silo }}
     steps:
       - name: Checkout
@@ -51,6 +52,10 @@ jobs:
               - '.github/workflows/**'
             asistencia:
               - 'apps/asistencia/**'
+              - 'core/**'
+              - '.github/workflows/**'
+            lectura:
+              - 'apps/lectura/**'
               - 'core/**'
               - '.github/workflows/**'
             silo:
@@ -84,6 +89,15 @@ jobs:
     with:
       app_name: asistencia
       app_path: apps/asistencia
+
+  ci-lectura:
+    name: CI lectura
+    needs: changes
+    if: needs.changes.outputs.lectura == 'true' || github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/reusable-app-ci.yml
+    with:
+      app_name: lectura
+      app_path: apps/lectura
 
   ci-silo:
     name: CI silo
