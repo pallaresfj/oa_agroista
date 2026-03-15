@@ -65,7 +65,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return false;
         }
 
-        if ($this->hasRole(self::ROLE_SUPER_ADMIN)) {
+        if ($this->isDocente()) {
             return true;
         }
 
