@@ -61,3 +61,9 @@ php artisan db:seed --class=Database\\Seeders\\RolePermissionSafeSeeder --force
 - `GET /up` responde 200.
 - Login SSO desde `/sso/login` completa callback correctamente.
 - Livewire en panel `/admin` responde 200 en requests `/livewire/*`.
+
+## Migracion manual de datos
+
+Para corte controlado desde app legacy hacia `oa-planes`, usar:
+
+- `apps/planes/docs/MANUAL_CUTOVER_MIGRATION.md`

@@ -120,3 +120,4 @@ Troubleshooting rápido:
 
 - Guía app `planes`: `docs/DOKPLOY_DEPLOY.md`
 - Guía ecosistema completo: `../../infra/DOKPLOY_MONOREPO_RUNBOOK.md`
+- Guía de migración manual/cutover: `docs/MANUAL_CUTOVER_MIGRATION.md`
