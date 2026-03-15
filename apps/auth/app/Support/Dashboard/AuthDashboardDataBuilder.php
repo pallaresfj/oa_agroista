@@ -86,7 +86,7 @@ class AuthDashboardDataBuilder
         $ecosystem = OAuthClient::query()
             ->where('revoked', false)
             ->orderBy('name')
-            ->get(['id', 'name', 'redirect_uris'])
+            ->get(['id', 'name', 'base_url', 'redirect_uris'])
             ->map(fn (OAuthClient $client): array => $this->buildEcosystemCard($client))
             ->values()
             ->all();
@@ -248,8 +248,8 @@ class AuthDashboardDataBuilder
 
     private function buildEcosystemCard(OAuthClient $client): array
     {
-        $redirectUrl = $this->resolvePrimaryRedirectUri($client->redirect_uris);
-        $host = $redirectUrl ? parse_url($redirectUrl, PHP_URL_HOST) : null;
+        $externalUrl = $this->resolveClientExternalUrl($client);
+        $host = $externalUrl ? parse_url($externalUrl, PHP_URL_HOST) : null;
 
         return [
             'name' => $client->name,
@@ -259,9 +259,20 @@ class AuthDashboardDataBuilder
             'manageUrl' => EcosystemAppResource::getUrl('index', [
                 'tableSearch' => $client->name,
             ]),
-            'externalUrl' => $redirectUrl,
+            'externalUrl' => $externalUrl,
             'status' => 'Activo',
         ];
+    }
+
+    private function resolveClientExternalUrl(OAuthClient $client): ?string
+    {
+        $baseUrl = trim((string) $client->base_url);
+
+        if (filter_var($baseUrl, FILTER_VALIDATE_URL)) {
+            return rtrim($baseUrl, '/');
+        }
+
+        return $this->resolvePrimaryRedirectUri($client->redirect_uris);
     }
 
     /**

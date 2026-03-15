@@ -57,3 +57,33 @@ php artisan db:seed --force
 - `GET /up` responde 200.
 - Discovery OIDC: `/.well-known/openid-configuration` responde 200.
 - Login Google y callback funcionan en `auth`.
+
+## Si no se guardan cambios en Apps ecosistema
+
+Cuando la edición de `Redirect URIs` o `Frontchannel logout URIs` no persiste en producción, normalmente el host no está en whitelist efectiva de runtime.
+
+1. Verifica hosts cargados en runtime:
+
+```bash
+php artisan tinker --execute="dump(config('sso.allowed_redirect_hosts'), config('sso.post_logout_redirect_hosts'));"
+```
+
+2. Ajusta en Dokploy:
+
+- `SSO_ALLOWED_REDIRECT_HOSTS`
+- `SSO_POST_LOGOUT_REDIRECT_HOSTS`
+
+Incluye dominios reales activos. Si todavía usas temporalmente `oa-auth.<dominio>`, mantenlo hasta cerrar el corte definitivo.
+
+3. Refresca caché de configuración:
+
+```bash
+php artisan optimize:clear
+php artisan config:cache
+```
+
+4. Reintenta la edición en `/admin` y confirma en DB:
+
+```bash
+php artisan tinker --execute="dump(App\\Models\\OAuthClient::query()->get(['name','base_url','redirect_uris','frontchannel_logout_uris'])->toArray());"
+```

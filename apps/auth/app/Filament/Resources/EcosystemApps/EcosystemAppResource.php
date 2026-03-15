@@ -13,11 +13,14 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Js;
 use Illuminate\Support\Str;
@@ -26,6 +29,11 @@ use Laravel\Passport\ClientRepository;
 
 class EcosystemAppResource extends Resource
 {
+    /**
+     * @var array<int, string>
+     */
+    private const DASHBOARD_WINDOWS = ['today', '7d', '30d'];
+
     protected static ?string $model = OAuthClient::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
@@ -55,6 +63,11 @@ class EcosystemAppResource extends Resource
                     ->label('URL base')
                     ->required()
                     ->url()
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, Set $set, mixed $state, mixed $old): void {
+                        static::syncUriFieldsFromBaseUrl($get, $set, $state, $old);
+                    })
+                    ->helperText('Si dejas URIs vacías, se autocompletan desde esta URL base.')
                     ->maxLength(2048),
                 TagsInput::make('redirect_uris')
                     ->label('Redirect URIs')
@@ -194,7 +207,7 @@ class EcosystemAppResource extends Resource
                     ->tooltip(fn (OAuthClient $record): string => $record->revoked ? 'Activar app' : 'Revocar app')
                     ->color(fn (OAuthClient $record): string => $record->revoked ? 'success' : 'danger')
                     ->requiresConfirmation()
-                    ->action(fn (OAuthClient $record): bool => $record->update(['revoked' => ! $record->revoked])),
+                    ->action(fn (OAuthClient $record): bool => static::toggleRevoked($record)),
                 DeleteAction::make()
                     ->iconButton()
                     ->tooltip('Eliminar app ecosistema')
@@ -218,7 +231,9 @@ class EcosystemAppResource extends Resource
      */
     public static function createApp(array $data): OAuthClient
     {
-        $redirectUris = static::sanitizeRedirectUris($data['redirect_uris'] ?? []);
+        $baseUrl = static::normalizeBaseUrl((string) ($data['base_url'] ?? ''));
+        $uriDefaults = static::buildUriDefaultsFromBaseUrl($baseUrl);
+        $redirectUris = static::sanitizeRedirectUris(static::resolveUriInput($data['redirect_uris'] ?? [], $uriDefaults['redirect_uris']));
         $slug = static::sanitizeSlug((string) ($data['slug'] ?? ''), '');
 
         /** @var ClientRepository $clients */
@@ -233,13 +248,15 @@ class EcosystemAppResource extends Resource
 
         $client->forceFill([
             'slug' => $slug,
-            'base_url' => rtrim((string) ($data['base_url'] ?? ''), '/'),
+            'base_url' => $baseUrl,
             'is_active' => (bool) ($data['is_active'] ?? true),
-            'frontchannel_logout_uris' => static::sanitizeFrontchannelLogoutUris($data['frontchannel_logout_uris'] ?? []),
+            'frontchannel_logout_uris' => static::sanitizeFrontchannelLogoutUris(static::resolveUriInput($data['frontchannel_logout_uris'] ?? [], $uriDefaults['frontchannel_logout_uris'])),
             'grant_types' => ['authorization_code', 'refresh_token'],
             'scopes' => static::sanitizeScopes($data['scopes'] ?? []),
             'revoked' => (bool) ($data['revoked'] ?? false),
         ])->save();
+
+        static::flushDashboardCache();
 
         return $client->refresh();
     }
@@ -249,17 +266,22 @@ class EcosystemAppResource extends Resource
      */
     public static function updateApp(OAuthClient $record, array $data): OAuthClient
     {
+        $baseUrl = static::normalizeBaseUrl((string) ($data['base_url'] ?? $record->base_url));
+        $uriDefaults = static::buildUriDefaultsFromBaseUrl($baseUrl);
+
         $record->forceFill([
             'name' => trim((string) ($data['name'] ?? $record->name)),
             'slug' => static::sanitizeSlug((string) ($data['slug'] ?? $record->slug), $record->getKey()),
-            'base_url' => rtrim((string) ($data['base_url'] ?? $record->base_url), '/'),
+            'base_url' => $baseUrl,
             'is_active' => (bool) ($data['is_active'] ?? $record->is_active),
-            'redirect_uris' => static::sanitizeRedirectUris($data['redirect_uris'] ?? []),
-            'frontchannel_logout_uris' => static::sanitizeFrontchannelLogoutUris($data['frontchannel_logout_uris'] ?? []),
+            'redirect_uris' => static::sanitizeRedirectUris(static::resolveUriInput($data['redirect_uris'] ?? [], $uriDefaults['redirect_uris'])),
+            'frontchannel_logout_uris' => static::sanitizeFrontchannelLogoutUris(static::resolveUriInput($data['frontchannel_logout_uris'] ?? [], $uriDefaults['frontchannel_logout_uris'])),
             'grant_types' => ['authorization_code', 'refresh_token'],
             'scopes' => static::sanitizeScopes($data['scopes'] ?? []),
             'revoked' => (bool) ($data['revoked'] ?? false),
         ])->save();
+
+        static::flushDashboardCache();
 
         return $record;
     }
@@ -326,7 +348,7 @@ class EcosystemAppResource extends Resource
 
             if (! in_array($host, $hosts, true)) {
                 throw ValidationException::withMessages([
-                    'redirect_uris' => "Host no permitido en redirect URI: {$uri}",
+                    'redirect_uris' => "No se guardó: host no permitido en redirect URI ({$uri}). ".static::allowedHostsHint($hosts, 'SSO_ALLOWED_REDIRECT_HOSTS'),
                 ]);
             }
         }
@@ -367,7 +389,7 @@ class EcosystemAppResource extends Resource
 
             if (! in_array($host, $hosts, true)) {
                 throw ValidationException::withMessages([
-                    'frontchannel_logout_uris' => "Host no permitido en frontchannel URI: {$uri}",
+                    'frontchannel_logout_uris' => "No se guardó: host no permitido en frontchannel URI ({$uri}). ".static::allowedHostsHint($hosts, 'SSO_POST_LOGOUT_REDIRECT_HOSTS'),
                 ]);
             }
         }
@@ -404,7 +426,7 @@ class EcosystemAppResource extends Resource
 
     public static function deleteApp(OAuthClient $record): bool
     {
-        return DB::transaction(function () use ($record): bool {
+        $deleted = DB::transaction(function () use ($record): bool {
             $accessTokenIds = DB::table('oauth_access_tokens')
                 ->where('client_id', $record->getKey())
                 ->pluck('id')
@@ -426,6 +448,23 @@ class EcosystemAppResource extends Resource
 
             return (bool) $record->delete();
         });
+
+        if ($deleted) {
+            static::flushDashboardCache();
+        }
+
+        return $deleted;
+    }
+
+    public static function toggleRevoked(OAuthClient $record): bool
+    {
+        $updated = $record->update(['revoked' => ! $record->revoked]);
+
+        if ($updated) {
+            static::flushDashboardCache();
+        }
+
+        return $updated;
     }
 
     public static function suggestFrontchannelClientKey(OAuthClient $record): string
@@ -495,6 +534,100 @@ class EcosystemAppResource extends Resource
             ->filter()
             ->values()
             ->all();
+    }
+
+    private static function syncUriFieldsFromBaseUrl(Get $get, Set $set, mixed $state, mixed $old): void
+    {
+        $newBaseUrl = static::normalizeBaseUrl((string) $state);
+
+        if ($newBaseUrl === '') {
+            return;
+        }
+
+        $previousBaseUrl = static::normalizeBaseUrl((string) $old);
+        $currentRedirectUris = static::normalizeStringArrayState($get('redirect_uris'));
+        $currentFrontchannelUris = static::normalizeStringArrayState($get('frontchannel_logout_uris'));
+        $newDefaults = static::buildUriDefaultsFromBaseUrl($newBaseUrl);
+        $previousDefaults = static::buildUriDefaultsFromBaseUrl($previousBaseUrl);
+
+        if (static::shouldAutofillUris($currentRedirectUris, $previousDefaults['redirect_uris'])) {
+            $set('redirect_uris', $newDefaults['redirect_uris']);
+        }
+
+        if (static::shouldAutofillUris($currentFrontchannelUris, $previousDefaults['frontchannel_logout_uris'])) {
+            $set('frontchannel_logout_uris', $newDefaults['frontchannel_logout_uris']);
+        }
+    }
+
+    /**
+     * @return array{redirect_uris: array<int, string>, frontchannel_logout_uris: array<int, string>}
+     */
+    private static function buildUriDefaultsFromBaseUrl(string $baseUrl): array
+    {
+        $normalizedBaseUrl = static::normalizeBaseUrl($baseUrl);
+
+        if ($normalizedBaseUrl === '') {
+            return [
+                'redirect_uris' => [],
+                'frontchannel_logout_uris' => [],
+            ];
+        }
+
+        return [
+            'redirect_uris' => [
+                "{$normalizedBaseUrl}/sso/callback",
+                "{$normalizedBaseUrl}/sso/session-check/callback",
+            ],
+            'frontchannel_logout_uris' => [
+                "{$normalizedBaseUrl}/sso/frontchannel-logout",
+            ],
+        ];
+    }
+
+    /**
+     * @param  array<int, string>  $currentUris
+     * @param  array<int, string>  $previousDefaults
+     */
+    private static function shouldAutofillUris(array $currentUris, array $previousDefaults): bool
+    {
+        if ($currentUris === []) {
+            return true;
+        }
+
+        return array_values($currentUris) === array_values($previousDefaults);
+    }
+
+    private static function normalizeBaseUrl(string $url): string
+    {
+        return rtrim(trim($url), '/');
+    }
+
+    /**
+     * @param  array<int, string>  $defaultUris
+     * @return array<int, string>
+     */
+    private static function resolveUriInput(mixed $state, array $defaultUris): array
+    {
+        $normalized = static::normalizeStringArrayState($state);
+
+        return $normalized !== [] ? $normalized : $defaultUris;
+    }
+
+    /**
+     * @param  array<int, string>  $hosts
+     */
+    private static function allowedHostsHint(array $hosts, string $envVariable): string
+    {
+        $hostsList = $hosts !== [] ? implode(', ', $hosts) : '(sin hosts configurados)';
+
+        return "Hosts permitidos ({$envVariable}): {$hostsList}. Si actualizaste variables en Dokploy, ejecuta optimize:clear y config:cache.";
+    }
+
+    public static function flushDashboardCache(): void
+    {
+        foreach (self::DASHBOARD_WINDOWS as $window) {
+            Cache::forget("auth_dashboard:{$window}");
+        }
     }
 
     private static function sanitizeFrontchannelClientKey(string $clientKey): string

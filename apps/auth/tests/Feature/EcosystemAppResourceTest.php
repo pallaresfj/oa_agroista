@@ -12,6 +12,32 @@ class EcosystemAppResourceTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_create_app_autogenerates_uris_from_base_url_when_empty(): void
+    {
+        $client = EcosystemAppResource::createApp([
+            'name' => 'Asistencia',
+            'slug' => 'asistencia',
+            'base_url' => 'https://oa-asistencia.test',
+            'redirect_uris' => [],
+            'frontchannel_logout_uris' => [],
+            'scopes' => ['openid', 'email', 'profile'],
+            'is_active' => true,
+            'revoked' => false,
+        ]);
+
+        $this->assertSame(
+            [
+                'https://oa-asistencia.test/sso/callback',
+                'https://oa-asistencia.test/sso/session-check/callback',
+            ],
+            $client->redirect_uris,
+        );
+        $this->assertSame(
+            ['https://oa-asistencia.test/sso/frontchannel-logout'],
+            $client->frontchannel_logout_uris,
+        );
+    }
+
     public function test_create_app_accepts_string_inputs_for_redirect_uris_and_scopes(): void
     {
         $client = EcosystemAppResource::createApp([
@@ -39,6 +65,94 @@ class EcosystemAppResourceTest extends TestCase
             'slug' => 'cliente-prueba',
             'revoked' => false,
         ]);
+    }
+
+    public function test_update_app_autogenerates_uris_from_base_url_when_lists_are_empty(): void
+    {
+        $client = EcosystemAppResource::createApp([
+            'name' => 'Planes',
+            'slug' => 'planes',
+            'base_url' => 'https://oa-planes.test',
+            'redirect_uris' => ['https://oa-planes.test/sso/callback'],
+            'frontchannel_logout_uris' => ['https://oa-planes.test/sso/frontchannel-logout'],
+            'scopes' => ['openid', 'email', 'profile'],
+            'is_active' => true,
+            'revoked' => false,
+        ]);
+
+        $updated = EcosystemAppResource::updateApp($client->fresh(), [
+            'name' => 'Planes',
+            'slug' => 'planes',
+            'base_url' => 'https://oa-asistencia.test',
+            'redirect_uris' => [],
+            'frontchannel_logout_uris' => [],
+            'scopes' => ['openid', 'email', 'profile'],
+            'is_active' => true,
+            'revoked' => false,
+        ])->fresh();
+
+        $this->assertSame(
+            [
+                'https://oa-asistencia.test/sso/callback',
+                'https://oa-asistencia.test/sso/session-check/callback',
+            ],
+            $updated->redirect_uris,
+        );
+        $this->assertSame(
+            ['https://oa-asistencia.test/sso/frontchannel-logout'],
+            $updated->frontchannel_logout_uris,
+        );
+    }
+
+    public function test_update_app_preserves_manual_override_when_uris_are_provided(): void
+    {
+        $client = EcosystemAppResource::createApp([
+            'name' => 'Planes',
+            'slug' => 'planes-manual',
+            'base_url' => 'https://oa-planes.test',
+            'redirect_uris' => ['https://oa-planes.test/sso/callback'],
+            'frontchannel_logout_uris' => ['https://oa-planes.test/sso/frontchannel-logout'],
+            'scopes' => ['openid', 'email', 'profile'],
+            'is_active' => true,
+            'revoked' => false,
+        ]);
+
+        $manualRedirects = ['https://oa-planes.test/oauth/callback-custom'];
+        $manualFrontchannel = ['https://oa-planes.test/logout/frontchannel-custom'];
+
+        $updated = EcosystemAppResource::updateApp($client->fresh(), [
+            'name' => 'Planes',
+            'slug' => 'planes-manual',
+            'base_url' => 'https://oa-asistencia.test',
+            'redirect_uris' => $manualRedirects,
+            'frontchannel_logout_uris' => $manualFrontchannel,
+            'scopes' => ['openid', 'email', 'profile'],
+            'is_active' => true,
+            'revoked' => false,
+        ])->fresh();
+
+        $this->assertSame($manualRedirects, $updated->redirect_uris);
+        $this->assertSame($manualFrontchannel, $updated->frontchannel_logout_uris);
+    }
+
+    public function test_redirect_uri_host_validation_error_mentions_whitelist_and_runtime_config_hint(): void
+    {
+        config()->set('sso.allowed_redirect_hosts', ['oa-planes.test']);
+        config()->set('sso.insecure_redirect_hosts', []);
+
+        try {
+            EcosystemAppResource::sanitizeRedirectUris(['https://oa-asistencia.test/sso/callback']);
+            $this->fail('Se esperaba ValidationException por host no permitido.');
+        } catch (ValidationException $exception) {
+            $messages = $exception->errors()['redirect_uris'] ?? [];
+            $message = implode(' ', $messages);
+
+            $this->assertStringContainsString('No se guardó: host no permitido', $message);
+            $this->assertStringContainsString('SSO_ALLOWED_REDIRECT_HOSTS', $message);
+            $this->assertStringContainsString('oa-planes.test', $message);
+            $this->assertStringContainsString('optimize:clear', $message);
+            $this->assertStringContainsString('config:cache', $message);
+        }
     }
 
     public function test_delete_app_removes_related_tokens_and_auth_codes(): void
