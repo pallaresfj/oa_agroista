@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class StudentResource extends Resource
@@ -33,7 +34,32 @@ class StudentResource extends Resource
 
     public static function canAccess(): bool
     {
+        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canCreate(): bool
+    {
         return Auth::check() && Auth::user()->canManageReadingOperations();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canCreate();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canCreate();
     }
 
     public static function getEloquentQuery(): Builder
@@ -41,7 +67,7 @@ class StudentResource extends Resource
         $query = parent::getEloquentQuery()->with('course');
         $user = Auth::user();
 
-        if (! $user || $user->isAdminEquivalent()) {
+        if (! $user || $user->isAdminEquivalent() || $user->isDirectivo()) {
             return $query;
         }
 

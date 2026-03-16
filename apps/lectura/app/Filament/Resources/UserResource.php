@@ -19,6 +19,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
@@ -41,6 +42,31 @@ class UserResource extends Resource
     public static function canAccess(): bool
     {
         return Auth::check() && Auth::user()->isAdminEquivalent();
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canCreate(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canAccess();
     }
 
     public static function form(Schema $schema): Schema

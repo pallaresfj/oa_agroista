@@ -65,7 +65,6 @@ class RolePermissionSeeder extends Seeder
                     ->orWhere('name', 'view_docente_dashboard')
                     ->orWhere('name', 'view_reading_stats_widget')
                     ->orWhere('name', 'view_recent_attempts_widget')
-                    ->orWhere('name', 'view_reading_session')
                     ->orWhere('name', 'view_any_reading_attempt')
                     ->orWhere('name', 'view_reading_attempt')
                     ->orWhere('name', 'view_any_student')

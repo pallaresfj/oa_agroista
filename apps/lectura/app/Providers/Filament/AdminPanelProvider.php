@@ -16,6 +16,7 @@ use App\Filament\Widgets\RecentAttemptsWidget;
 use App\Http\Middleware\EnsureIdpSessionIsAlive;
 use App\Support\Institution\InstitutionTheme;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use Filament\Enums\ThemeMode;
 use Filament\Enums\UserMenuPosition;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -39,7 +40,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('app')
             ->path('app')
             ->login(FilamentLogin::class)
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->profile(EditProfile::class)
+            ->darkMode(false)
+            ->defaultThemeMode(ThemeMode::Light)
             ->sidebarCollapsibleOnDesktop()
             ->userMenu(position: UserMenuPosition::Sidebar)
             ->colors(InstitutionTheme::filamentColors())

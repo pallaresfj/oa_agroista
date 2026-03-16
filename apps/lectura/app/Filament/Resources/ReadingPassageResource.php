@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class ReadingPassageResource extends Resource
@@ -33,7 +34,32 @@ class ReadingPassageResource extends Resource
 
     public static function canAccess(): bool
     {
+        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+    }
+
+    public static function canViewAny(): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return static::canAccess();
+    }
+
+    public static function canCreate(): bool
+    {
         return Auth::check() && Auth::user()->canManageReadingOperations();
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return static::canCreate();
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return static::canCreate();
     }
 
     public static function form(Schema $schema): Schema

@@ -44,32 +44,32 @@ class RoleResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->can('view_any_role');
+        return Auth::check() && Auth::user()->isAdminEquivalent();
     }
 
     public static function canViewAny(): bool
     {
-        return Auth::check() && Auth::user()->can('view_any_role');
+        return static::canAccess();
     }
 
     public static function canView(Model $record): bool
     {
-        return Auth::check() && Auth::user()->can('view_role');
+        return static::canAccess();
     }
 
     public static function canCreate(): bool
     {
-        return Auth::check() && Auth::user()->can('create_role');
+        return static::canAccess();
     }
 
     public static function canEdit(Model $record): bool
     {
-        return Auth::check() && Auth::user()->can('update_role');
+        return static::canAccess();
     }
 
     public static function canDelete(Model $record): bool
     {
-        return Auth::check() && Auth::user()->can('delete_role');
+        return static::canAccess();
     }
 
     public static function form(Schema $schema): Schema

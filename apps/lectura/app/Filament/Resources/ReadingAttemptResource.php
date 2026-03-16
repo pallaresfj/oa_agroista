@@ -10,8 +10,8 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -221,6 +221,30 @@ class ReadingAttemptResource extends Resource
 
     public static function canCreate(): bool
     {
+        return false;
+    }
+
+    public static function canViewAny(): bool
+    {
+        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+    }
+
+    public static function canView(Model $record): bool
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->isAdminEquivalent() || $user->isDirectivo()) {
+            return true;
+        }
+
+        if ($user->isDocente()) {
+            return (int) $record->teacher_id === (int) $user->id;
+        }
+
         return false;
     }
 
