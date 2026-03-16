@@ -165,7 +165,7 @@ return [
     'resources' => [
         'subject' => 'model',
         'manage' => [
-            \BezhanSalleh\FilamentShield\Resources\Roles\RoleResource::class => [
+            \App\Filament\Resources\Roles\RoleResource::class => [
                 'viewAny',
                 'view',
                 'create',

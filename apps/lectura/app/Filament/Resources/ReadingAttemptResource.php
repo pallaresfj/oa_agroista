@@ -40,7 +40,14 @@ class ReadingAttemptResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+        $user = Auth::user();
+
+        return (bool) $user?->canAny([
+            'view_any_reading_attempt',
+            'view_reading_attempt',
+            'update_reading_attempt',
+            'delete_reading_attempt',
+        ]);
     }
 
     public static function getEloquentQuery(): Builder
@@ -52,7 +59,7 @@ class ReadingAttemptResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        if ($user->isDocente()) {
+        if (! $user->can('view_any_reading_attempt')) {
             $query->where('teacher_id', $user->id);
         }
 
@@ -226,7 +233,7 @@ class ReadingAttemptResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+        return Auth::user()?->canAny(['view_any_reading_attempt', 'view_reading_attempt']) ?? false;
     }
 
     public static function canView(Model $record): bool
@@ -237,15 +244,15 @@ class ReadingAttemptResource extends Resource
             return false;
         }
 
-        if ($user->isAdminEquivalent() || $user->isDirectivo()) {
+        if (! $user->canAny(['view_any_reading_attempt', 'view_reading_attempt'])) {
+            return false;
+        }
+
+        if ($user->can('view_any_reading_attempt')) {
             return true;
         }
 
-        if ($user->isDocente()) {
-            return (int) $record->teacher_id === (int) $user->id;
-        }
-
-        return false;
+        return (int) $record->teacher_id === (int) $user->id;
     }
 
     public static function canEdit(Model $record): bool
@@ -256,19 +263,29 @@ class ReadingAttemptResource extends Resource
             return false;
         }
 
-        if ($user->isAdminEquivalent()) {
+        if (! $user->can('update_reading_attempt')) {
+            return false;
+        }
+
+        if ($user->can('view_any_reading_attempt')) {
             return true;
         }
 
-        if ($user->isDocente()) {
-            return (int) $record->teacher_id === (int) $user->id;
-        }
-
-        return false;
+        return (int) $record->teacher_id === (int) $user->id;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::canEdit($record);
+        $user = Auth::user();
+
+        if (! $user || ! $user->can('delete_reading_attempt')) {
+            return false;
+        }
+
+        if ($user->can('view_any_reading_attempt')) {
+            return true;
+        }
+
+        return (int) $record->teacher_id === (int) $user->id;
     }
 }

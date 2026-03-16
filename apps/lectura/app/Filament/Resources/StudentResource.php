@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\StudentResource\Pages;
 use App\Models\Course;
 use App\Models\Student;
+use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
@@ -34,32 +35,68 @@ class StudentResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+        $user = Auth::user();
+
+        return (bool) $user?->canAny([
+            'view_any_student',
+            'view_student',
+            'create_student',
+            'update_student',
+            'delete_student',
+        ]);
     }
 
     public static function canViewAny(): bool
     {
-        return static::canAccess();
+        return Auth::user()?->canAny(['view_any_student', 'view_student']) ?? false;
     }
 
     public static function canView(Model $record): bool
     {
-        return static::canAccess();
+        $user = Auth::user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if (! $user->canAny(['view_any_student', 'view_student'])) {
+            return false;
+        }
+
+        return static::recordIsVisibleForUser($record, $user);
     }
 
     public static function canCreate(): bool
     {
-        return Auth::check() && Auth::user()->canManageReadingOperations();
+        $user = Auth::user();
+
+        if (! $user) {
+            return false;
+        }
+
+        return $user->can('create_student');
     }
 
     public static function canEdit(Model $record): bool
     {
-        return static::canCreate();
+        $user = Auth::user();
+
+        if (! $user || ! $user->can('update_student')) {
+            return false;
+        }
+
+        return static::recordIsVisibleForUser($record, $user);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::canCreate();
+        $user = Auth::user();
+
+        if (! $user || ! $user->can('delete_student')) {
+            return false;
+        }
+
+        return static::recordIsVisibleForUser($record, $user);
     }
 
     public static function getEloquentQuery(): Builder
@@ -67,21 +104,25 @@ class StudentResource extends Resource
         $query = parent::getEloquentQuery()->with('course');
         $user = Auth::user();
 
-        if (! $user || $user->isAdminEquivalent() || $user->isDirectivo()) {
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->can('view_any_student')) {
             return $query;
         }
 
-        if ($user->isDocente()) {
-            $courseIds = $user->assignedCourses()->pluck('courses.id')->all();
-
-            if ($courseIds === []) {
-                return $query->whereRaw('1 = 0');
-            }
-
-            return $query->whereIn('course_id', $courseIds);
+        if (! $user->can('view_student')) {
+            return $query->whereRaw('1 = 0');
         }
 
-        return $query->whereRaw('1 = 0');
+        $courseIds = $user->assignedCourses()->pluck('courses.id')->all();
+
+        if ($courseIds === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('course_id', $courseIds);
     }
 
     public static function form(Schema $schema): Schema
@@ -124,8 +165,14 @@ class StudentResource extends Resource
                     ->color('info'),
             ])
             ->recordActions([
-                EditAction::make()->iconButton()->tooltip('Editar'),
-                DeleteAction::make()->iconButton()->tooltip('Eliminar'),
+                EditAction::make()
+                    ->iconButton()
+                    ->tooltip('Editar')
+                    ->visible(fn (Student $record): bool => static::canEdit($record)),
+                DeleteAction::make()
+                    ->iconButton()
+                    ->tooltip('Eliminar')
+                    ->visible(fn (Student $record): bool => static::canDelete($record)),
             ])
             ->defaultSort('name');
     }
@@ -137,5 +184,24 @@ class StudentResource extends Resource
             'create' => Pages\CreateStudent::route('/create'),
             'edit' => Pages\EditStudent::route('/{record}/edit'),
         ];
+    }
+
+    private static function recordIsVisibleForUser(Model $record, User $user): bool
+    {
+        if (! $record instanceof Student) {
+            return false;
+        }
+
+        if ($user->can('view_any_student')) {
+            return true;
+        }
+
+        $courseIds = $user->assignedCourses()->pluck('courses.id')->all();
+
+        if ($courseIds === []) {
+            return false;
+        }
+
+        return in_array((int) $record->course_id, array_map('intval', $courseIds), true);
     }
 }

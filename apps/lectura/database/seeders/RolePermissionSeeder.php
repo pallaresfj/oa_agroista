@@ -13,7 +13,7 @@ class RolePermissionSeeder extends Seeder
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        $allPermissions = Permission::query()->pluck('name');
+        $allPermissions = Permission::query()->pluck('name')->values();
 
         Role::query()
             ->firstOrCreate([
@@ -29,28 +29,21 @@ class RolePermissionSeeder extends Seeder
             ])
             ->syncPermissions($allPermissions);
 
-        $docentePermissions = Permission::query()
-            ->whereNotIn('name', [
-                'view_any_role',
-                'view_role',
-                'create_role',
-                'update_role',
-                'delete_role',
-                'delete_any_role',
-                'view_any_user',
-                'view_user',
-                'create_user',
-                'update_user',
-                'delete_user',
-                'delete_any_user',
-                'view_any_course',
-                'view_course',
-                'create_course',
-                'update_course',
-                'delete_course',
-                'delete_any_course',
+        $docentePermissions = $allPermissions
+            ->intersect([
+                'panel_user',
+                'view_docente_dashboard',
+                'view_reading_session',
+                'view_reading_stats_widget',
+                'view_recent_attempts_widget',
+                'view_student',
+                'view_reading_passage',
+                'view_reading_attempt',
+                'create_reading_attempt',
+                'update_reading_attempt',
+                'delete_reading_attempt',
             ])
-            ->pluck('name');
+            ->values();
 
         Role::query()
             ->firstOrCreate([
@@ -59,20 +52,20 @@ class RolePermissionSeeder extends Seeder
             ])
             ->syncPermissions($docentePermissions);
 
-        $directivoPermissions = Permission::query()
-            ->where(function ($query): void {
-                $query->where('name', 'panel_user')
-                    ->orWhere('name', 'view_docente_dashboard')
-                    ->orWhere('name', 'view_reading_stats_widget')
-                    ->orWhere('name', 'view_recent_attempts_widget')
-                    ->orWhere('name', 'view_any_reading_attempt')
-                    ->orWhere('name', 'view_reading_attempt')
-                    ->orWhere('name', 'view_any_student')
-                    ->orWhere('name', 'view_student')
-                    ->orWhere('name', 'view_any_reading_passage')
-                    ->orWhere('name', 'view_reading_passage');
-            })
-            ->pluck('name');
+        $directivoPermissions = $allPermissions
+            ->intersect([
+                'panel_user',
+                'view_docente_dashboard',
+                'view_reading_stats_widget',
+                'view_recent_attempts_widget',
+                'view_any_reading_attempt',
+                'view_reading_attempt',
+                'view_any_student',
+                'view_student',
+                'view_any_reading_passage',
+                'view_reading_passage',
+            ])
+            ->values();
 
         Role::query()
             ->firstOrCreate([

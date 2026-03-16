@@ -14,17 +14,30 @@ class ReadingStatsWidget extends BaseWidget
 {
     protected function getStats(): array
     {
+        $user = Auth::user();
         $attemptsQuery = ReadingAttempt::query()->where('status', ReadingAttempt::STATUS_COMPLETED);
 
-        if (Auth::user()->isDocente()) {
+        if (! $user?->can('view_any_reading_attempt')) {
             $attemptsQuery->where('teacher_id', Auth::id());
+        }
+
+        $studentsQuery = Student::query();
+
+        if (! $user?->can('view_any_student')) {
+            $courseIds = $user?->assignedCourses()->pluck('courses.id')->all() ?? [];
+
+            if ($courseIds === []) {
+                $studentsQuery->whereRaw('1 = 0');
+            } else {
+                $studentsQuery->whereIn('course_id', $courseIds);
+            }
         }
 
         $completedAttempts = (clone $attemptsQuery)->count();
         $averageWpm = round((float) ((clone $attemptsQuery)->avg('words_per_minute') ?? 0), 1);
 
         return [
-            Stat::make('Estudiantes', Student::query()->count())
+            Stat::make('Estudiantes', (clone $studentsQuery)->count())
                 ->description('Registrados en el sistema')
                 ->descriptionIcon('heroicon-m-users', IconPosition::Before)
                 ->color('primary'),

@@ -6,14 +6,24 @@ use App\Models\ReadingAttempt;
 use App\Models\ReadingPassage;
 use App\Models\Student;
 use App\Models\User;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->seed(RoleSeeder::class);
+    Artisan::call('shield:generate', [
+        '--all' => true,
+        '--panel' => 'app',
+        '--option' => 'permissions',
+    ]);
+    $this->seed(PanelAccessSeeder::class);
+    $this->seed(RolePermissionSeeder::class);
 });
 
 it('runs reading session flow start stop and save with typed errors', function (): void {
@@ -45,7 +55,8 @@ it('runs reading session flow start stop and save with typed errors', function (
         ->assertSet('showFinalizeModal', true)
         ->call('saveEvaluation')
         ->assertSet('showFinalizeModal', false)
-        ->assertSet('activeAttemptId', null);
+        ->assertSet('activeAttemptId', null)
+        ->assertSet('activeAttemptStartedAtMs', null);
 
     $attempt = ReadingAttempt::query()
         ->where('teacher_id', $docente->id)
@@ -84,7 +95,8 @@ it('cancels attempt when discarding reading session', function (): void {
         ->call('startAttempt')
         ->call('discardAndReset')
         ->assertSet('showFinalizeModal', false)
-        ->assertSet('activeAttemptId', null);
+        ->assertSet('activeAttemptId', null)
+        ->assertSet('activeAttemptStartedAtMs', null);
 
     $attempt = ReadingAttempt::query()
         ->where('teacher_id', $docente->id)

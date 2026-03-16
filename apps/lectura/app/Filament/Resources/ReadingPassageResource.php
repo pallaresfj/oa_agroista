@@ -34,32 +34,40 @@ class ReadingPassageResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+        $user = Auth::user();
+
+        return (bool) $user?->canAny([
+            'view_any_reading_passage',
+            'view_reading_passage',
+            'create_reading_passage',
+            'update_reading_passage',
+            'delete_reading_passage',
+        ]);
     }
 
     public static function canViewAny(): bool
     {
-        return static::canAccess();
+        return Auth::user()?->canAny(['view_any_reading_passage', 'view_reading_passage']) ?? false;
     }
 
     public static function canView(Model $record): bool
     {
-        return static::canAccess();
+        return Auth::user()?->canAny(['view_any_reading_passage', 'view_reading_passage']) ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return Auth::check() && Auth::user()->canManageReadingOperations();
+        return Auth::user()?->can('create_reading_passage') ?? false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return static::canCreate();
+        return Auth::user()?->can('update_reading_passage') ?? false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::canCreate();
+        return Auth::user()?->can('delete_reading_passage') ?? false;
     }
 
     public static function form(Schema $schema): Schema

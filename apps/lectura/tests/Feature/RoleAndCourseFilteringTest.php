@@ -13,14 +13,24 @@ use App\Models\ReadingError;
 use App\Models\ReadingPassage;
 use App\Models\Student;
 use App\Models\User;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->seed(RoleSeeder::class);
+    Artisan::call('shield:generate', [
+        '--all' => true,
+        '--panel' => 'app',
+        '--option' => 'permissions',
+    ]);
+    $this->seed(PanelAccessSeeder::class);
+    $this->seed(RolePermissionSeeder::class);
 });
 
 it('applies role capabilities for soporte, directivo and docente', function (): void {
@@ -104,9 +114,11 @@ it('enforces the role matrix for panel resources', function (): void {
         ->and(UserResource::canAccess())->toBeFalse()
         ->and(CourseResource::canAccess())->toBeFalse()
         ->and(StudentResource::canAccess())->toBeTrue()
-        ->and(StudentResource::canCreate())->toBeTrue()
+        ->and(StudentResource::canCreate())->toBeFalse()
+        ->and(StudentResource::canEdit($student))->toBeFalse()
+        ->and(StudentResource::canDelete($student))->toBeFalse()
         ->and(ReadingPassageResource::canAccess())->toBeTrue()
-        ->and(ReadingPassageResource::canCreate())->toBeTrue()
+        ->and(ReadingPassageResource::canCreate())->toBeFalse()
         ->and(ReadingAttemptResource::canViewAny())->toBeTrue()
         ->and(ReadingAttemptResource::canEdit($attempt))->toBeTrue();
 

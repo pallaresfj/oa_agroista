@@ -29,6 +29,8 @@ class ReadingSession extends Page
 
     public ?int $activeAttemptId = null;
 
+    public ?int $activeAttemptStartedAtMs = null;
+
     public bool $showFinalizeModal = false;
 
     public int $finalCentiseconds = 0;
@@ -39,7 +41,7 @@ class ReadingSession extends Page
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->canManageReadingOperations();
+        return Auth::check() && Auth::user()->can('view_reading_session');
     }
 
     public function getTitle(): string|Htmlable
@@ -65,10 +67,20 @@ class ReadingSession extends Page
         $this->activeAttemptId = $activeAttempt->id;
         $this->studentId = $activeAttempt->student_id;
         $this->passageId = $activeAttempt->passage_id;
+        $this->activeAttemptStartedAtMs = $activeAttempt->started_at?->valueOf();
     }
 
     public function startAttempt(): void
     {
+        if (! Auth::user()?->can('create_reading_attempt')) {
+            Notification::make()
+                ->title('No tiene permisos para iniciar intentos.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         if ($this->getActiveAttemptRecord()) {
             Notification::make()
                 ->title('Ya existe un intento en curso.')
@@ -121,6 +133,7 @@ class ReadingSession extends Page
         ]);
 
         $this->activeAttemptId = $attempt->id;
+        $this->activeAttemptStartedAtMs = $attempt->started_at?->valueOf();
         $this->showFinalizeModal = false;
         $this->finalCentiseconds = 0;
         $this->resetErrorCounters();
@@ -161,6 +174,15 @@ class ReadingSession extends Page
 
     public function saveEvaluation(): void
     {
+        if (! Auth::user()?->can('update_reading_attempt')) {
+            Notification::make()
+                ->title('No tiene permisos para guardar la evaluación.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $attempt = $this->getActiveAttemptRecord();
 
         if (! $attempt) {
@@ -203,6 +225,15 @@ class ReadingSession extends Page
 
     public function discardAndReset(): void
     {
+        if (! Auth::user()?->can('update_reading_attempt')) {
+            Notification::make()
+                ->title('No tiene permisos para descartar el intento.')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $attempt = $this->getActiveAttemptRecord();
 
         if (! $attempt) {
@@ -235,6 +266,12 @@ class ReadingSession extends Page
 
     public function getPassageOptions(): array
     {
+        $user = Auth::user();
+
+        if (! $user || ! $user->canAny(['view_any_reading_passage', 'view_reading_passage'])) {
+            return [];
+        }
+
         return ReadingPassage::query()
             ->where('is_active', true)
             ->orderBy('title')
@@ -303,11 +340,11 @@ class ReadingSession extends Page
         $query = Student::query();
         $user = Auth::user();
 
-        if (! $user || ! $user->canManageReadingOperations()) {
+        if (! $user || ! $user->canAny(['view_any_student', 'view_student'])) {
             return $query->whereRaw('1 = 0');
         }
 
-        if ($user->isAdminEquivalent()) {
+        if ($user->can('view_any_student')) {
             return $query;
         }
 
@@ -348,6 +385,7 @@ class ReadingSession extends Page
     private function resetSessionState(): void
     {
         $this->activeAttemptId = null;
+        $this->activeAttemptStartedAtMs = null;
         $this->showFinalizeModal = false;
         $this->finalCentiseconds = 0;
         $this->resetErrorCounters();

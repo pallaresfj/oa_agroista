@@ -17,41 +17,33 @@ use App\Models\Course;
 use App\Models\ReadingPassage;
 use App\Models\Student;
 use App\Models\User;
+use Database\Seeders\PanelAccessSeeder;
+use Database\Seeders\RolePermissionSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Livewire\Livewire;
-use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     $this->seed(RoleSeeder::class);
+    Artisan::call('shield:generate', [
+        '--all' => true,
+        '--panel' => 'app',
+        '--option' => 'permissions',
+    ]);
+    $this->seed(PanelAccessSeeder::class);
+    $this->seed(RolePermissionSeeder::class);
 });
 
 function makeAdminWithRolePermissions(): User
 {
-    $permissions = [
-        'view_any_role',
-        'view_role',
-        'create_role',
-        'update_role',
-        'delete_role',
-    ];
-
-    $permissionModels = collect($permissions)->map(function (string $permission) {
-        return Permission::query()->firstOrCreate([
-            'name' => $permission,
-            'guard_name' => 'web',
-        ]);
-    });
-
     $superAdminRole = Role::query()->firstOrCreate([
         'name' => User::ROLE_SUPER_ADMIN,
         'guard_name' => 'web',
     ]);
-
-    $superAdminRole->syncPermissions($permissionModels);
 
     $user = User::factory()->create();
     $user->assignRole($superAdminRole);
@@ -211,4 +203,3 @@ it('redirects to user index after create and edit', function (): void {
         ->assertHasNoFormErrors()
         ->assertRedirect(UserResource::getUrl('index'));
 });
-

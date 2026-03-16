@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource;
 use App\Models\User;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Spatie\Permission\PermissionRegistrar;
 
 class EditUser extends EditRecord
 {
@@ -31,5 +32,7 @@ class EditUser extends EditRecord
         if (! $record->isDocente()) {
             $record->assignedCourses()->detach();
         }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

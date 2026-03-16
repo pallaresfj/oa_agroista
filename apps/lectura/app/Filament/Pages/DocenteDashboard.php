@@ -22,7 +22,7 @@ class DocenteDashboard extends Page
 
     public static function canAccess(): bool
     {
-        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
+        return Auth::check() && Auth::user()->can('view_docente_dashboard');
     }
 
     public function getTitle(): string|Htmlable

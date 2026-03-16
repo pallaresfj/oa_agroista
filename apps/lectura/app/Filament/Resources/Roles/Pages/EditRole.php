@@ -10,6 +10,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Spatie\Permission\PermissionRegistrar;
 
 class EditRole extends EditRecord
 {
@@ -51,6 +52,7 @@ class EditRole extends EditRecord
 
         // @phpstan-ignore-next-line
         $this->record->syncPermissions($permissionModels);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     protected function getRedirectUrl(): string

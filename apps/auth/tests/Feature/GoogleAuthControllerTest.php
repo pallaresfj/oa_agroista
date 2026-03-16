@@ -138,6 +138,30 @@ class GoogleAuthControllerTest extends TestCase
         $this->assertStringContainsString(urlencode('https://appengine.google.com/_ah/logout?continue='.urlencode($continue)), (string) $target);
     }
 
+    public function test_logout_forces_google_logout_chain_when_global_flag_is_enabled(): void
+    {
+        config()->set('sso.google_logout_from_browser', false);
+
+        $user = User::query()->create([
+            'name' => 'Admin',
+            'email' => 'admin@iedagropivijay.edu.co',
+            'google_id' => 'google-admin',
+            'is_active' => true,
+        ]);
+
+        $continue = 'http://localhost:8000/admin/login';
+
+        $this->actingAs($user, 'web');
+
+        $response = $this->get('/logout?continue='.urlencode($continue).'&global=1');
+
+        $target = $response->headers->get('Location');
+
+        $this->assertNotNull($target);
+        $this->assertStringContainsString('https://accounts.google.com/Logout?continue=', (string) $target);
+        $this->assertStringContainsString(urlencode('https://appengine.google.com/_ah/logout?continue='.urlencode($continue)), (string) $target);
+    }
+
     public function test_logout_redirects_to_signed_frontchannel_endpoint_when_configured(): void
     {
         config()->set('sso.google_logout_from_browser', false);

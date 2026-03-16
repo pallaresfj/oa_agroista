@@ -6,6 +6,7 @@ use App\Filament\Resources\UserResource;
 use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\PermissionRegistrar;
 
 class CreateUser extends CreateRecord
 {
@@ -27,6 +28,8 @@ class CreateUser extends CreateRecord
         if (! $record->isDocente()) {
             $record->assignedCourses()->detach();
         }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     protected function getRedirectUrl(): string

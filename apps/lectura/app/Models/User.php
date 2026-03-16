@@ -74,15 +74,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return false;
         }
 
-        if ($this->isAdminEquivalent() || $this->isDocente() || $this->isDirectivo()) {
-            return true;
-        }
-
-        if ($this->can('panel_user')) {
-            return true;
-        }
-
-        return false;
+        return $this->can('panel_user');
     }
 
     public function isSuperAdmin(): bool
@@ -153,7 +145,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function dashboardRouteName(): string
     {
-        if ($this->isAdminEquivalent() || $this->isDocente() || $this->isDirectivo()) {
+        if ($this->can('view_docente_dashboard')) {
             return 'dashboard';
         }
 

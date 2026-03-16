@@ -199,6 +199,7 @@ class GoogleAuthController extends Controller
     public function logout(Request $request): RedirectResponse
     {
         $source = trim((string) $request->input('source', ''));
+        $forceGlobalLogout = filter_var($request->input('global', false), FILTER_VALIDATE_BOOLEAN);
 
         /** @var User|null $user */
         $user = $request->user();
@@ -222,7 +223,7 @@ class GoogleAuthController extends Controller
         $sourceClient = $this->resolveSourceClient($source);
         $targetAfterLocalClients = $targetUrl;
 
-        if (config('sso.google_logout_from_browser', true)) {
+        if ($forceGlobalLogout || config('sso.google_logout_from_browser', true)) {
             $targetAfterLocalClients = $this->buildGoogleLogoutUrl($targetUrl);
         }
 

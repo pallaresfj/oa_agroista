@@ -2,13 +2,13 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login as FilamentLogin;
 use App\Filament\Pages\DocenteDashboard;
 use App\Filament\Pages\ReadingSession;
 use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\ReadingAttemptResource;
 use App\Filament\Resources\ReadingPassageResource;
+use App\Filament\Resources\Roles\RoleResource;
 use App\Filament\Resources\StudentResource;
 use App\Filament\Resources\UserResource;
 use App\Filament\Widgets\ReadingStatsWidget;
@@ -41,9 +41,8 @@ class AdminPanelProvider extends PanelProvider
             ->path('app')
             ->login(FilamentLogin::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
-            ->profile(EditProfile::class)
-            ->darkMode(false)
-            ->defaultThemeMode(ThemeMode::Light)
+            ->profile(null)
+            ->defaultThemeMode(ThemeMode::System)
             ->sidebarCollapsibleOnDesktop()
             ->userMenu(position: UserMenuPosition::Sidebar)
             ->colors(InstitutionTheme::filamentColors())
@@ -58,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
                 ReadingAttemptResource::class,
                 CourseResource::class,
                 UserResource::class,
+                RoleResource::class,
             ])
             ->pages([
                 DocenteDashboard::class,

@@ -41,32 +41,40 @@ class UserResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->isAdminEquivalent();
+        $user = Auth::user();
+
+        return (bool) $user?->canAny([
+            'view_any_user',
+            'view_user',
+            'create_user',
+            'update_user',
+            'delete_user',
+        ]);
     }
 
     public static function canViewAny(): bool
     {
-        return static::canAccess();
+        return Auth::user()?->canAny(['view_any_user', 'view_user']) ?? false;
     }
 
     public static function canView(Model $record): bool
     {
-        return static::canAccess();
+        return Auth::user()?->canAny(['view_any_user', 'view_user']) ?? false;
     }
 
     public static function canCreate(): bool
     {
-        return static::canAccess();
+        return Auth::user()?->can('create_user') ?? false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return static::canAccess();
+        return Auth::user()?->can('update_user') ?? false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::canAccess();
+        return Auth::user()?->can('delete_user') ?? false;
     }
 
     public static function form(Schema $schema): Schema
