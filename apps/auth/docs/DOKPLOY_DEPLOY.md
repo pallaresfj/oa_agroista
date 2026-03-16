@@ -31,7 +31,7 @@ Variables minimas:
 - `REDIS_HOST=redis-shared`
 - `REDIS_PREFIX=auth_`
 - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI`
-- `PLANES_*`, `ASISTENCIA_*`, `SILO_*`
+- `PLANES_*`, `ASISTENCIA_*`, `LECTURA_*`, `SILO_*`
 
 ## Primer despliegue (one-time)
 
