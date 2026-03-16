@@ -22,7 +22,7 @@ class SoporteDashboard extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
-    protected static ?string $navigationLabel = 'Panel de Soporte';
+    protected static ?string $navigationLabel = 'Inicio';
 
     protected static ?int $navigationSort = 0;
 
@@ -33,7 +33,7 @@ class SoporteDashboard extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return 'Panel de Soporte';
+        return 'Inicio';
     }
 
     protected function getHeaderActions(): array

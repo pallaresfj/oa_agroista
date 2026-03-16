@@ -21,7 +21,7 @@ class DirectivoDashboard extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-chart-bar';
 
-    protected static ?string $navigationLabel = 'Dashboard Directivo';
+    protected static ?string $navigationLabel = 'Inicio';
 
     protected static ?int $navigationSort = 1;
 
@@ -32,7 +32,7 @@ class DirectivoDashboard extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return 'Dashboard Directivo';
+        return 'Inicio';
     }
 
     public function getWidgets(): array

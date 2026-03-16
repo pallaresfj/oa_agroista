@@ -20,7 +20,7 @@ class DocenteDashboard extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-home';
 
-    protected static ?string $navigationLabel = 'Dashboard';
+    protected static ?string $navigationLabel = 'Inicio';
 
     protected static ?string $slug = 'dashboard';
 
@@ -29,6 +29,11 @@ class DocenteDashboard extends Page
     protected string $view = 'filament.pages.docente-dashboard';
 
     public ?int $selectedCourseId = null;
+
+    /**
+     * @var array<int, int>
+     */
+    public array $selectedCourseIds = [];
 
     public string $sortOption = 'recent';
 
@@ -39,23 +44,46 @@ class DocenteDashboard extends Page
 
     public function getTitle(): string|Htmlable
     {
-        return 'Panel del Docente';
+        return 'Inicio';
     }
 
-    public function setCourseFilter(?int $courseId = null): void
+    public function setCourseFilter(int|string|null $courseId = null): void
     {
+        $normalizedCourseId = is_numeric($courseId) ? (int) $courseId : null;
+
         $allowedCourseIds = $this->getCourseOptions()
             ->pluck('id')
             ->map(fn (mixed $id): int => (int) $id)
             ->all();
 
-        if (! $courseId || ! in_array($courseId, $allowedCourseIds, true)) {
+        if (! $normalizedCourseId || ! in_array($normalizedCourseId, $allowedCourseIds, true)) {
             $this->selectedCourseId = null;
 
             return;
         }
 
-        $this->selectedCourseId = $courseId;
+        $this->selectedCourseId = $normalizedCourseId;
+    }
+
+    public function updatedSelectedCourseId(mixed $value): void
+    {
+        $this->setCourseFilter($value);
+    }
+
+    public function updatedSelectedCourseIds(mixed $value): void
+    {
+        if (! is_array($value)) {
+            $this->selectedCourseIds = [];
+
+            return;
+        }
+
+        $allowedCourseIds = $this->getCourseOptions()
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+
+        $this->selectedCourseIds = $this->sanitizeCourseIds($value, $allowedCourseIds);
     }
 
     public function updatedSortOption(string $value): void
@@ -68,6 +96,16 @@ class DocenteDashboard extends Page
     public function isDocenteContext(): bool
     {
         return Auth::user()?->isDocente() ?? false;
+    }
+
+    public function isDirectivoContext(): bool
+    {
+        return Auth::user()?->isDirectivo() ?? false;
+    }
+
+    public function isStudentPerformanceContext(): bool
+    {
+        return $this->isDocenteContext() || $this->isDirectivoContext();
     }
 
     /**
@@ -121,7 +159,7 @@ class DocenteDashboard extends Page
      */
     public function getStudentCards(): array
     {
-        if (! $this->isDocenteContext()) {
+        if (! $this->isStudentPerformanceContext()) {
             return [];
         }
 
@@ -130,16 +168,24 @@ class DocenteDashboard extends Page
             ->map(fn (mixed $id): int => (int) $id)
             ->all();
 
-        if ($this->selectedCourseId && ! in_array($this->selectedCourseId, $courseIds, true)) {
-            $this->selectedCourseId = null;
-        }
-
         $studentsQuery = (clone $this->studentsQuery())
             ->with('course')
             ->orderBy('name');
 
-        if ($this->selectedCourseId) {
-            $studentsQuery->where('course_id', $this->selectedCourseId);
+        if ($this->isDirectivoContext()) {
+            $selectedCourseIds = $this->getSelectedDirectivoCourseIds($courseIds);
+
+            if ($selectedCourseIds !== []) {
+                $studentsQuery->whereIn('course_id', $selectedCourseIds);
+            }
+        } else {
+            if ($this->selectedCourseId && ! in_array($this->selectedCourseId, $courseIds, true)) {
+                $this->selectedCourseId = null;
+            }
+
+            if ($this->selectedCourseId) {
+                $studentsQuery->where('course_id', $this->selectedCourseId);
+            }
         }
 
         /** @var EloquentCollection<int, Student> $students */
@@ -149,13 +195,18 @@ class DocenteDashboard extends Page
             return [];
         }
 
-        $attemptsByStudent = ReadingAttempt::query()
-            ->where('teacher_id', Auth::id())
+        $attemptsQuery = ReadingAttempt::query()
             ->where('status', ReadingAttempt::STATUS_COMPLETED)
             ->whereIn('student_id', $students->pluck('id'))
             ->orderByDesc('finished_at')
-            ->orderByDesc('id')
-            ->get(['id', 'student_id', 'words_per_minute', 'total_errors', 'finished_at'])
+            ->orderByDesc('id');
+
+        if ($this->isDocenteContext()) {
+            $attemptsQuery->where('teacher_id', Auth::id());
+        }
+
+        $attemptsByStudent = $attemptsQuery
+            ->get(['id', 'student_id', 'teacher_id', 'words_per_minute', 'total_errors', 'finished_at'])
             ->groupBy('student_id');
 
         $cards = $students->map(function (Student $student) use ($attemptsByStudent): array {
@@ -193,9 +244,123 @@ class DocenteDashboard extends Page
         return $this->sortCards($cards)->values()->all();
     }
 
+    /**
+     * @return array{
+     *   total_attempts:int,
+     *   global_avg_pcpm:float|null,
+     *   courses:array<int, array{
+     *     course_id:int,
+     *     course_name:string,
+     *     students_count:int,
+     *     attempts_count:int,
+     *     avg_pcpm:float|null,
+     *     avg_pcpm_bar_percent:int
+     *   }>
+     * }
+     */
+    public function getDirectivoCourseMetrics(): array
+    {
+        if (! $this->isDirectivoContext()) {
+            return [
+                'total_attempts' => 0,
+                'global_avg_pcpm' => null,
+                'courses' => [],
+            ];
+        }
+
+        $courseIds = $this->getCourseOptions()
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+
+        $selectedCourseIds = $this->getSelectedDirectivoCourseIds($courseIds);
+
+        if ($selectedCourseIds !== []) {
+            $courseIds = $selectedCourseIds;
+        }
+
+        if ($courseIds === []) {
+            return [
+                'total_attempts' => 0,
+                'global_avg_pcpm' => null,
+                'courses' => [],
+            ];
+        }
+
+        $courses = Course::query()
+            ->whereIn('id', $courseIds)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $studentsCountByCourse = (clone $this->studentsQuery())
+            ->whereIn('course_id', $courseIds)
+            ->selectRaw('course_id, COUNT(*) as aggregate_count')
+            ->groupBy('course_id')
+            ->pluck('aggregate_count', 'course_id');
+
+        $pcpmExpression = $this->pcpmSqlExpression();
+
+        $attemptsByCourse = ReadingAttempt::query()
+            ->join('students', 'students.id', '=', 'reading_attempts.student_id')
+            ->whereIn('students.course_id', $courseIds)
+            ->where('reading_attempts.status', ReadingAttempt::STATUS_COMPLETED)
+            ->selectRaw('students.course_id as course_id')
+            ->selectRaw('COUNT(*) as attempts_count')
+            ->selectRaw("AVG({$pcpmExpression}) as avg_pcpm")
+            ->groupBy('students.course_id')
+            ->get()
+            ->keyBy('course_id');
+
+        $globalAttempts = (int) $attemptsByCourse
+            ->sum(fn (object $row): int => (int) ($row->attempts_count ?? 0));
+
+        $globalAvgPcpm = ReadingAttempt::query()
+            ->join('students', 'students.id', '=', 'reading_attempts.student_id')
+            ->whereIn('students.course_id', $courseIds)
+            ->where('reading_attempts.status', ReadingAttempt::STATUS_COMPLETED)
+            ->selectRaw("AVG({$pcpmExpression}) as avg_pcpm")
+            ->value('avg_pcpm');
+
+        $maxAvg = $attemptsByCourse
+            ->map(fn (object $row): float => (float) ($row->avg_pcpm ?? 0))
+            ->max() ?? 0;
+
+        $courseMetrics = $courses->map(function (Course $course) use ($studentsCountByCourse, $attemptsByCourse, $maxAvg): array {
+            $attempts = $attemptsByCourse->get($course->id);
+            $avgPcpm = $attempts ? round((float) ($attempts->avg_pcpm ?? 0), 1) : null;
+            $barPercent = ($avgPcpm !== null && $maxAvg > 0)
+                ? max(6, (int) round(($avgPcpm / $maxAvg) * 100))
+                : 0;
+
+            return [
+                'course_id' => (int) $course->id,
+                'course_name' => (string) $course->name,
+                'students_count' => (int) ($studentsCountByCourse[$course->id] ?? 0),
+                'attempts_count' => (int) ($attempts->attempts_count ?? 0),
+                'avg_pcpm' => $avgPcpm,
+                'avg_pcpm_bar_percent' => $barPercent,
+            ];
+        })->all();
+
+        return [
+            'total_attempts' => $globalAttempts,
+            'global_avg_pcpm' => $globalAvgPcpm !== null ? round((float) $globalAvgPcpm, 1) : null,
+            'courses' => $courseMetrics,
+        ];
+    }
+
     public function canShowAddStudentCta(): bool
     {
         return Auth::user()?->can('create_student') ?? false;
+    }
+
+    public function canStartNewEvaluation(): bool
+    {
+        $user = Auth::user();
+
+        return (bool) $user
+            && $user->can('view_reading_session')
+            && $user->can('create_reading_attempt');
     }
 
     public function getNewEvaluationUrl(): string
@@ -205,10 +370,10 @@ class DocenteDashboard extends Page
 
     public function exportCsv(): ?StreamedResponse
     {
-        if (! $this->isDocenteContext()) {
+        if (! $this->isStudentPerformanceContext()) {
             Notification::make()
                 ->title('Acción no disponible')
-                ->body('La exportación aplica únicamente al panel del docente.')
+                ->body('La exportación aplica únicamente al panel de seguimiento.')
                 ->warning()
                 ->send();
 
@@ -323,5 +488,40 @@ class DocenteDashboard extends Page
             'name' => $cards->sortBy(fn (array $card): string => mb_strtolower((string) $card['student_name'])),
             default => $cards->sortByDesc(fn (array $card): int => $card['finished_at_ts'] ?? -1),
         };
+    }
+
+    private function pcpmSqlExpression(): string
+    {
+        return 'CASE WHEN reading_attempts.words_per_minute - reading_attempts.total_errors < 0 THEN 0 ELSE reading_attempts.words_per_minute - reading_attempts.total_errors END';
+    }
+
+    /**
+     * @param  array<int, int>  $allowedCourseIds
+     * @return array<int, int>
+     */
+    private function getSelectedDirectivoCourseIds(array $allowedCourseIds): array
+    {
+        $selectedCourseIds = $this->sanitizeCourseIds($this->selectedCourseIds, $allowedCourseIds);
+
+        if ($selectedCourseIds !== $this->selectedCourseIds) {
+            $this->selectedCourseIds = $selectedCourseIds;
+        }
+
+        return $selectedCourseIds;
+    }
+
+    /**
+     * @param  array<int, mixed>  $candidateIds
+     * @param  array<int, int>  $allowedCourseIds
+     * @return array<int, int>
+     */
+    private function sanitizeCourseIds(array $candidateIds, array $allowedCourseIds): array
+    {
+        return collect($candidateIds)
+            ->map(fn (mixed $id): ?int => is_numeric($id) ? (int) $id : null)
+            ->filter(fn (?int $id): bool => $id !== null && in_array($id, $allowedCourseIds, true))
+            ->unique()
+            ->values()
+            ->all();
     }
 }

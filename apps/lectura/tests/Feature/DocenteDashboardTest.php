@@ -72,7 +72,7 @@ it('renders teacher dashboard cards with computed pcpm', function (): void {
 
     Livewire::actingAs($docente)
         ->test(DocenteDashboard::class)
-        ->assertSee('Panel del Docente')
+        ->assertSee('Inicio')
         ->assertDontSee('Panel de lectura')
         ->assertSee('PCPM')
         ->assertSee('Mateo Garcia')
@@ -220,11 +220,50 @@ it('applies threshold labels for advanced expected and reinforcement levels', fu
 });
 
 it('shows legacy widgets for non-docente users', function (): void {
-    $directivo = User::factory()->create();
-    $directivo->assignRole(User::ROLE_DIRECTIVO);
+    $soporte = User::factory()->create();
+    $soporte->assignRole(User::ROLE_SOPORTE);
 
-    $this->actingAs($directivo)
+    $this->actingAs($soporte)
         ->get('/app/dashboard')
         ->assertStatus(200)
         ->assertSee('Intentos recientes');
+});
+
+it('renders student performance dashboard for directivo with course select filter', function (): void {
+    $courseA = Course::query()->create(['name' => 'Grado 5 A']);
+    $courseB = Course::query()->create(['name' => 'Grado 5 B']);
+
+    $directivo = User::factory()->create();
+    $directivo->assignRole(User::ROLE_DIRECTIVO);
+
+    $docente = User::factory()->create();
+    $docente->assignRole(User::ROLE_DOCENTE);
+    $docente->assignedCourses()->sync([$courseA->id, $courseB->id]);
+
+    $studentA = Student::query()->create(['name' => 'Alba Directivo A', 'course_id' => $courseA->id]);
+    $studentB = Student::query()->create(['name' => 'Beto Directivo B', 'course_id' => $courseB->id]);
+
+    $passage = ReadingPassage::query()->create([
+        'title' => 'Lectura Directivo',
+        'content' => 'uno dos tres cuatro cinco seis siete ocho nueve diez',
+        'is_active' => true,
+    ]);
+
+    createCompletedAttempt($docente, $studentA, $passage, 105, 3, now()->subHours(3));
+    createCompletedAttempt($docente, $studentB, $passage, 88, 4, now()->subHours(4));
+
+    Livewire::actingAs($directivo)
+        ->test(DocenteDashboard::class)
+        ->assertSee('Inicio')
+        ->assertSee('Alba Directivo A')
+        ->assertSee('Beto Directivo B')
+        ->assertSee('Todos los grupos')
+        ->assertSee('Métricas por curso')
+        ->assertSee('Intentos totales')
+        ->assertSee('Promedio PCPM por curso')
+        ->assertSee('Intentos por curso')
+        ->assertDontSee('Nueva Evaluación')
+        ->set('selectedCourseIds', [$courseA->id])
+        ->assertSee('Alba Directivo A')
+        ->assertDontSee('Beto Directivo B');
 });
