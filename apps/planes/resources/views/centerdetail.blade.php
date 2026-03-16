@@ -156,9 +156,9 @@
     </section>
 
     <footer class="bg-gray-900 text-gray-300 py-6">
-      <div class="max-w-7xl mx-auto px-4 text-sm flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+      <div class="max-w-7xl mx-auto px-4 text-sm" style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; flex-wrap: wrap;">
         <p>&copy; {{ date('Y') }} {{ data_get($institutionBranding ?? [], 'name', config('app.name', 'Institucion')) }}. {{ data_get($institutionBranding ?? [], 'location', 'Pivijay, Magdalena - Colombia') }}</p>
-        <p class="md:ml-auto md:text-right">Desarrollado por <a rel="nofollow noopener noreferrer" href="https://asyservicios.com" target="_blank" class="text-green-500 hover:underline">AS&amp;Servicios.com</a></p>
+        <p style="margin-left: auto; text-align: right;">Desarrollado por <a rel="nofollow noopener noreferrer" href="https://asyservicios.com" target="_blank" class="text-green-500 hover:underline">AS&amp;Servicios.com</a></p>
       </div>
     </footer>
     
