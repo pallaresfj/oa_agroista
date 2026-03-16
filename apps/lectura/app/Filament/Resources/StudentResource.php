@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -151,18 +152,27 @@ class StudentResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('course.name')
+                    ->label('CURSO')
+                    ->searchable()
+                    ->placeholder('-'),
                 TextColumn::make('name')
-                    ->label('Nombre')
+                    ->label('NOMBRE')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('course.name')
-                    ->label('Curso')
-                    ->placeholder('-'),
                 TextColumn::make('reading_attempts_count')
                     ->label('Intentos')
                     ->counts('readingAttempts')
                     ->badge()
                     ->color('info'),
+            ])
+            ->filters([
+                SelectFilter::make('course_id')
+                    ->label('CURSO')
+                    ->relationship('course', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
             ])
             ->recordActions([
                 EditAction::make()
@@ -174,7 +184,16 @@ class StudentResource extends Resource
                     ->tooltip('Eliminar')
                     ->visible(fn (Student $record): bool => static::canDelete($record)),
             ])
-            ->defaultSort('name');
+            ->defaultSort(function (Builder $query): Builder {
+                return $query
+                    ->orderBy(
+                        Course::query()
+                            ->select('name')
+                            ->whereColumn('courses.id', 'students.course_id')
+                            ->limit(1)
+                    )
+                    ->orderBy('students.name');
+            });
     }
 
     public static function getPages(): array

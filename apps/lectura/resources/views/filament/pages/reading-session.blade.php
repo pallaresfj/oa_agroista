@@ -89,33 +89,7 @@
             class="space-y-6"
             style="position: sticky; top: 0.75rem; z-index: 30;">
             <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-                <div class="grid gap-4 md:grid-cols-2">
-                    <label class="space-y-1">
-                        <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Estudiante</span>
-                        <select
-                            wire:model.live="studentId"
-                            @disabled($attempt !== null)
-                            class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700">
-                            <option value="">Seleccionar estudiante...</option>
-                            @foreach ($studentOptions as $optionId => $label)
-                                <option value="{{ $optionId }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-
-                    <label class="space-y-1">
-                        <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Lectura</span>
-                        <select
-                            wire:model.live="passageId"
-                            @disabled($attempt !== null)
-                            class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700">
-                            <option value="">Seleccionar lectura...</option>
-                            @foreach ($passageOptions as $optionId => $label)
-                                <option value="{{ $optionId }}">{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                </div>
+                {{ $this->form }}
 
                 @if ($studentOptions === [])
                     <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200">

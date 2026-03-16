@@ -44,7 +44,10 @@ class DocenteDashboard extends Page
 
     public function setCourseFilter(?int $courseId = null): void
     {
-        $allowedCourseIds = $this->getCourseOptions()->keys()->map(fn (mixed $id): int => (int) $id)->all();
+        $allowedCourseIds = $this->getCourseOptions()
+            ->pluck('id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
 
         if (! $courseId || ! in_array($courseId, $allowedCourseIds, true)) {
             $this->selectedCourseId = null;

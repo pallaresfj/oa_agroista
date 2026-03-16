@@ -119,6 +119,7 @@ it('enforces the role matrix for panel resources', function (): void {
         ->and(StudentResource::canDelete($student))->toBeFalse()
         ->and(ReadingPassageResource::canAccess())->toBeTrue()
         ->and(ReadingPassageResource::canCreate())->toBeFalse()
+        ->and(ReadingPassageResource::canEdit($passage))->toBeTrue()
         ->and(ReadingAttemptResource::canViewAny())->toBeTrue()
         ->and(ReadingAttemptResource::canEdit($attempt))->toBeTrue();
 

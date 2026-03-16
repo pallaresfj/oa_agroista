@@ -6,13 +6,19 @@ use App\Enums\ReadingErrorType;
 use App\Models\ReadingAttempt;
 use App\Models\ReadingPassage;
 use App\Models\Student;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 
-class ReadingSession extends Page
+class ReadingSession extends Page implements HasForms
 {
+    use InteractsWithForms;
+
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-microphone';
 
     protected static ?string $navigationLabel = 'Sesión de lectura';
@@ -47,6 +53,32 @@ class ReadingSession extends Page
     public function getTitle(): string|Htmlable
     {
         return 'Sesión de lectura';
+    }
+
+    public function form(Schema $schema): Schema
+    {
+        return $schema
+            ->columns(2)
+            ->components([
+                Select::make('studentId')
+                    ->label('Estudiante')
+                    ->placeholder('Seleccionar estudiante...')
+                    ->options(fn (): array => $this->getStudentOptions())
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->disabled(fn (): bool => $this->activeAttemptId !== null)
+                    ->live(),
+                Select::make('passageId')
+                    ->label('Lectura')
+                    ->placeholder('Seleccionar lectura...')
+                    ->options(fn (): array => $this->getPassageOptions())
+                    ->searchable()
+                    ->preload()
+                    ->native(false)
+                    ->disabled(fn (): bool => $this->activeAttemptId !== null)
+                    ->live(),
+            ]);
     }
 
     public function mount(): void

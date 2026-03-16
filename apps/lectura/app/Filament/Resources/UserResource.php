@@ -170,9 +170,11 @@ class UserResource extends Resource
                     ->label('CORREO')
                     ->searchable(),
 
-                TextColumn::make('phone')
-                    ->label('TELÉFONO')
-                    ->searchable()
+                TextColumn::make('assignedCourses.name')
+                    ->label('CURSOS ASIGNADOS')
+                    ->badge()
+                    ->listWithLineBreaks()
+                    ->placeholder('-')
                     ->toggleable(),
 
                 TextColumn::make('role_label')

@@ -116,6 +116,7 @@ class ReadingAttemptResource extends Resource
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => static::getStatusLabel($state))
                     ->color(fn (string $state): string => match ($state) {
                         ReadingAttempt::STATUS_COMPLETED => 'success',
                         ReadingAttempt::STATUS_CANCELLED => 'danger',
@@ -195,7 +196,10 @@ class ReadingAttemptResource extends Resource
                 TextEntry::make('student.name')->label('Estudiante'),
                 TextEntry::make('teacher.name')->label('Docente'),
                 TextEntry::make('passage.title')->label('Lectura'),
-                TextEntry::make('status')->label('Estado')->badge(),
+                TextEntry::make('status')
+                    ->label('Estado')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => static::getStatusLabel($state)),
                 TextEntry::make('duration_seconds')
                     ->label('Tiempo')
                     ->formatStateUsing(fn (int $state): string => gmdate('i:s', $state)),
@@ -313,5 +317,15 @@ class ReadingAttemptResource extends Resource
                     ->required()
             )
             ->all();
+    }
+
+    private static function getStatusLabel(string $status): string
+    {
+        return match ($status) {
+            ReadingAttempt::STATUS_IN_PROGRESS => 'En curso',
+            ReadingAttempt::STATUS_COMPLETED => 'Completado',
+            ReadingAttempt::STATUS_CANCELLED => 'Cancelado',
+            default => $status,
+        };
     }
 }

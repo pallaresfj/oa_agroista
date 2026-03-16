@@ -133,6 +133,7 @@ class ReadingPassageResource extends Resource
                     ->label('Exportar PDF')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('gray')
+                    ->iconButton()
                     ->tooltip('Exportar a PDF')
                     ->action(fn (ReadingPassage $record) => app(ReadingPassagePdfExporter::class)->download($record)),
                 EditAction::make()->iconButton()->tooltip('Editar'),

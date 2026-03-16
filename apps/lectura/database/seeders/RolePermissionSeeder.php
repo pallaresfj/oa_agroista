@@ -38,6 +38,7 @@ class RolePermissionSeeder extends Seeder
                 'view_recent_attempts_widget',
                 'view_student',
                 'view_reading_passage',
+                'update_reading_passage',
                 'view_reading_attempt',
                 'create_reading_attempt',
                 'update_reading_attempt',

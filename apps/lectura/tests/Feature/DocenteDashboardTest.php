@@ -81,6 +81,10 @@ it('renders teacher dashboard cards with computed pcpm', function (): void {
 });
 
 it('filters student cards by selected course', function (): void {
+    Course::query()->create(['name' => 'Curso dummy 1']);
+    Course::query()->create(['name' => 'Curso dummy 2']);
+    Course::query()->create(['name' => 'Curso dummy 3']);
+
     $courseA = Course::query()->create(['name' => 'Grado 1 A']);
     $courseB = Course::query()->create(['name' => 'Grado 1 B']);
     $docente = makeDocenteWithCourses([$courseA, $courseB]);
@@ -108,9 +112,17 @@ it('filters student cards by selected course', function (): void {
         ->test(DocenteDashboard::class)
         ->assertSee('Ana Curso A')
         ->assertSee('Bruno Curso B')
-        ->set('selectedCourseId', $courseA->id)
+        ->call('setCourseFilter', $courseA->id)
         ->assertSee('Ana Curso A')
         ->assertDontSee('Bruno Curso B');
+
+    Livewire::actingAs($docente)
+        ->test(DocenteDashboard::class)
+        ->assertSee('Ana Curso A')
+        ->assertSee('Bruno Curso B')
+        ->call('setCourseFilter', $courseB->id)
+        ->assertSee('Bruno Curso B')
+        ->assertDontSee('Ana Curso A');
 });
 
 it('sorts cards by recency, pcpm and name', function (): void {
