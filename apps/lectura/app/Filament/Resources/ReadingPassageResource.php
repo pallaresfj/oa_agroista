@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ReadingPassageResource\Pages;
 use App\Models\ReadingPassage;
+use App\Services\ReadingPassagePdfExporter;
+use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
@@ -127,6 +129,12 @@ class ReadingPassageResource extends Resource
                     ->since(),
             ])
             ->recordActions([
+                Action::make('exportPdf')
+                    ->label('Exportar PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->tooltip('Exportar a PDF')
+                    ->action(fn (ReadingPassage $record) => app(ReadingPassagePdfExporter::class)->download($record)),
                 EditAction::make()->iconButton()->tooltip('Editar'),
                 DeleteAction::make()->iconButton()->tooltip('Eliminar'),
             ])

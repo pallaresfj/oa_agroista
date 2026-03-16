@@ -1,6 +1,11 @@
 <?php
 
 use App\Filament\Pages\ReadingSession;
+use App\Filament\Resources\CourseResource;
+use App\Filament\Resources\CourseResource\Pages\CreateCourse;
+use App\Filament\Resources\CourseResource\Pages\EditCourse;
+use App\Filament\Resources\ReadingAttemptResource;
+use App\Filament\Resources\ReadingAttemptResource\Pages\EditReadingAttempt;
 use App\Filament\Resources\ReadingPassageResource;
 use App\Filament\Resources\ReadingPassageResource\Pages\CreateReadingPassage;
 use App\Filament\Resources\ReadingPassageResource\Pages\EditReadingPassage;
@@ -14,6 +19,7 @@ use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Models\Course;
+use App\Models\ReadingAttempt;
 use App\Models\ReadingPassage;
 use App\Models\Student;
 use App\Models\User;
@@ -74,6 +80,8 @@ it('renders reading session with base blocks on initial load', function (): void
         ->assertSee('Estudiante')
         ->assertSee('Lectura')
         ->assertSee('Iniciar')
+        ->assertSeeHtml('data-reading-fixed-header')
+        ->assertSeeHtml('data-reading-scroll')
         ->assertSee('Texto de lectura');
 });
 
@@ -102,6 +110,32 @@ it('redirects to student index after create and edit', function (): void {
         ->call('save')
         ->assertHasNoFormErrors()
         ->assertRedirect(StudentResource::getUrl('index'));
+});
+
+it('redirects to course index after create and edit', function (): void {
+    $admin = makeAdminWithRolePermissions();
+
+    Livewire::actingAs($admin)
+        ->test(CreateCourse::class)
+        ->fillForm([
+            'name' => 'Curso Redirect',
+            'is_active' => true,
+        ])
+        ->call('create')
+        ->assertHasNoFormErrors()
+        ->assertRedirect(CourseResource::getUrl('index'));
+
+    $course = Course::query()->where('name', 'Curso Redirect')->firstOrFail();
+
+    Livewire::actingAs($admin)
+        ->test(EditCourse::class, ['record' => $course->getKey()])
+        ->fillForm([
+            'name' => 'Curso Redirect Editado',
+            'is_active' => true,
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors()
+        ->assertRedirect(CourseResource::getUrl('index'));
 });
 
 it('redirects to reading passage index after create and edit', function (): void {
@@ -134,6 +168,50 @@ it('redirects to reading passage index after create and edit', function (): void
         ->call('save')
         ->assertHasNoFormErrors()
         ->assertRedirect(ReadingPassageResource::getUrl('index'));
+});
+
+it('redirects to reading attempt index after edit', function (): void {
+    $admin = makeAdminWithRolePermissions();
+
+    $course = Course::query()->create(['name' => 'Curso Intentos']);
+
+    $docente = User::factory()->create();
+    $docente->assignRole(User::ROLE_DOCENTE);
+    $docente->assignedCourses()->sync([$course->id]);
+
+    $student = Student::query()->create([
+        'name' => 'Estudiante Intentos',
+        'course_id' => $course->id,
+    ]);
+
+    $passage = ReadingPassage::query()->create([
+        'title' => 'Lectura Intentos',
+        'content' => 'uno dos tres cuatro cinco seis',
+        'is_active' => true,
+    ]);
+
+    $attempt = ReadingAttempt::query()->create([
+        'student_id' => $student->id,
+        'teacher_id' => $docente->id,
+        'passage_id' => $passage->id,
+        'status' => ReadingAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinute(),
+        'finished_at' => now(),
+        'duration_seconds' => 60,
+        'word_count' => $passage->word_count,
+        'words_per_minute' => 6,
+        'total_errors' => 0,
+        'notes' => null,
+    ]);
+
+    Livewire::actingAs($admin)
+        ->test(EditReadingAttempt::class, ['record' => $attempt->getKey()])
+        ->fillForm([
+            'notes' => 'Ajuste de revisión',
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors()
+        ->assertRedirect(ReadingAttemptResource::getUrl('index'));
 });
 
 it('redirects to role index after create and edit', function (): void {

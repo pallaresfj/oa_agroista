@@ -69,74 +69,92 @@
         };
     </script>
 
+    <style>
+        .oa-reading-scroll {
+            max-height: calc(100vh - 29rem);
+            overflow-y: auto;
+            padding-right: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .oa-reading-scroll {
+                max-height: calc(100vh - 26rem);
+            }
+        }
+    </style>
+
     <div class="space-y-6">
-        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="grid gap-4 md:grid-cols-2">
-                <label class="space-y-1">
-                    <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Estudiante</span>
-                    <select
-                        wire:model.live="studentId"
-                        @disabled($attempt !== null)
-                        class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700">
-                        <option value="">Seleccionar estudiante...</option>
-                        @foreach ($studentOptions as $optionId => $label)
-                            <option value="{{ $optionId }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </label>
+        <div
+            data-reading-fixed-header
+            class="space-y-6"
+            style="position: sticky; top: 0.75rem; z-index: 30;">
+            <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="grid gap-4 md:grid-cols-2">
+                    <label class="space-y-1">
+                        <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Estudiante</span>
+                        <select
+                            wire:model.live="studentId"
+                            @disabled($attempt !== null)
+                            class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700">
+                            <option value="">Seleccionar estudiante...</option>
+                            @foreach ($studentOptions as $optionId => $label)
+                                <option value="{{ $optionId }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
 
-                <label class="space-y-1">
-                    <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Lectura</span>
-                    <select
-                        wire:model.live="passageId"
-                        @disabled($attempt !== null)
-                        class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700">
-                        <option value="">Seleccionar lectura...</option>
-                        @foreach ($passageOptions as $optionId => $label)
-                            <option value="{{ $optionId }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </label>
-            </div>
-
-            @if ($studentOptions === [])
-                <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200">
-                    No hay estudiantes disponibles para su perfil. Si su rol es docente, primero asigne uno o más cursos al usuario.
+                    <label class="space-y-1">
+                        <span class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Lectura</span>
+                        <select
+                            wire:model.live="passageId"
+                            @disabled($attempt !== null)
+                            class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:disabled:bg-slate-700">
+                            <option value="">Seleccionar lectura...</option>
+                            @foreach ($passageOptions as $optionId => $label)
+                                <option value="{{ $optionId }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
                 </div>
-            @endif
-        </section>
 
-        <section
-            x-data="oaReadingTimer({ startedAtMs: $wire.entangle('activeAttemptStartedAtMs'), finalCentiseconds: $wire.entangle('finalCentiseconds') })"
-            x-init="init()"
-            class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
-            <div class="font-mono text-7xl font-bold leading-none tracking-tight text-slate-900 dark:text-slate-100 md:text-8xl">
-                <span x-text="main()">00:00</span><span class="text-4xl text-primary-600 md:text-5xl" x-text="decimals()">.00</span>
-            </div>
-
-            <div class="mt-7">
-                @if ($attempt)
-                    <x-filament::button
-                        wire:click="stopAttempt"
-                        color="danger"
-                        icon="heroicon-m-stop-circle"
-                        size="xl"
-                        class="min-w-72">
-                        Detener
-                    </x-filament::button>
-                @else
-                    <x-filament::button
-                        wire:click="startAttempt"
-                        color="success"
-                        icon="heroicon-m-play-circle"
-                        size="xl"
-                        class="min-w-72"
-                        :disabled="$studentOptions === [] || $passageOptions === []">
-                        Iniciar
-                    </x-filament::button>
+                @if ($studentOptions === [])
+                    <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-950/50 dark:text-amber-200">
+                        No hay estudiantes disponibles para su perfil. Si su rol es docente, primero asigne uno o más cursos al usuario.
+                    </div>
                 @endif
-            </div>
-        </section>
+            </section>
+            <section
+                x-data="oaReadingTimer({ startedAtMs: $wire.entangle('activeAttemptStartedAtMs'), finalCentiseconds: $wire.entangle('finalCentiseconds') })"
+                x-init="init()"
+                class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="font-mono text-7xl font-bold leading-none tracking-tight text-slate-900 dark:text-slate-100 md:text-8xl">
+                    <span x-text="main()">00:00</span><span class="text-4xl text-primary-600 md:text-5xl" x-text="decimals()">.00</span>
+                </div>
+
+                <div class="mt-7">
+                    @if ($attempt)
+                        <x-filament::button
+                            wire:click="stopAttempt"
+                            color="danger"
+                            icon="heroicon-m-stop-circle"
+                            size="xl"
+                            class="min-w-72">
+                            Detener
+                        </x-filament::button>
+                    @else
+                        <x-filament::button
+                            wire:click="startAttempt"
+                            color="success"
+                            icon="heroicon-m-play-circle"
+                            size="xl"
+                            class="min-w-72"
+                            :disabled="$studentOptions === [] || $passageOptions === []">
+                            Iniciar
+                        </x-filament::button>
+                    @endif
+                </div>
+            </section>
+        </div>
 
         <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900 md:p-10">
             <h2 class="mb-5 flex items-center gap-2 text-2xl font-semibold text-primary-600">
@@ -145,7 +163,7 @@
             </h2>
 
             @if ($selectedPassage)
-                <div class="space-y-4 text-2xl leading-relaxed text-slate-800 dark:text-slate-200 md:text-3xl">
+                <div data-reading-scroll class="oa-reading-scroll space-y-4 text-2xl leading-relaxed text-slate-800 dark:text-slate-200 md:text-3xl">
                     {!! nl2br(e($selectedPassage->content)) !!}
                 </div>
             @else
@@ -178,6 +196,7 @@
                 </div>
             </section>
         @endif
+
     </div>
 
     @if ($showFinalizeModal)

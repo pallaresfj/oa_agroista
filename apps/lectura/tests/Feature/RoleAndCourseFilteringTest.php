@@ -273,6 +273,73 @@ it('recalculates total errors when editing an attempt', function (): void {
         ->and($attempt->errors()->count())->toBe(1);
 });
 
+it('updates error counts by type when editing an attempt', function (): void {
+    $course = Course::query()->create(['name' => '7B']);
+
+    $admin = User::factory()->create();
+    $admin->assignRole(User::ROLE_SUPER_ADMIN);
+
+    $docente = User::factory()->create();
+    $docente->assignRole(User::ROLE_DOCENTE);
+
+    $student = Student::query()->create([
+        'name' => 'Estudiante Conteos',
+        'course_id' => $course->id,
+    ]);
+
+    $passage = ReadingPassage::query()->create([
+        'title' => 'Texto Conteos',
+        'content' => 'uno dos tres cuatro cinco seis siete',
+        'is_active' => true,
+    ]);
+
+    $attempt = ReadingAttempt::query()->create([
+        'student_id' => $student->id,
+        'teacher_id' => $docente->id,
+        'passage_id' => $passage->id,
+        'status' => ReadingAttempt::STATUS_COMPLETED,
+        'started_at' => now()->subMinute(),
+        'finished_at' => now(),
+        'duration_seconds' => 60,
+        'word_count' => $passage->word_count,
+        'words_per_minute' => 7,
+        'total_errors' => 0,
+    ]);
+
+    $attempt->errors()->create([
+        'error_type' => 'omision',
+        'occurred_at_seconds' => 5,
+    ]);
+
+    $attempt->errors()->create([
+        'error_type' => 'vacilacion',
+        'occurred_at_seconds' => 11,
+    ]);
+
+    Livewire::actingAs($admin)
+        ->test(EditReadingAttempt::class, ['record' => $attempt->getKey()])
+        ->fillForm([
+            'notes' => 'Ajuste por tipo',
+            'error_counts' => [
+                'omision' => 2,
+                'sustitucion' => 1,
+                'insercion' => 0,
+                'vacilacion' => 0,
+            ],
+        ])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $attempt->refresh();
+
+    expect($attempt->total_errors)->toBe(3)
+        ->and($attempt->errors()->where('error_type', 'omision')->count())->toBe(2)
+        ->and($attempt->errors()->where('error_type', 'sustitucion')->count())->toBe(1)
+        ->and($attempt->errors()->where('error_type', 'insercion')->count())->toBe(0)
+        ->and($attempt->errors()->where('error_type', 'vacilacion')->count())->toBe(0)
+        ->and($attempt->errors()->where('error_type', 'omision')->where('occurred_at_seconds', 5)->exists())->toBeTrue();
+});
+
 it('deletes attempt errors when an attempt is removed', function (): void {
     $course = Course::query()->create(['name' => '8A']);
 

@@ -6,10 +6,10 @@ use App\Enums\ReadingErrorType;
 use App\Filament\Resources\ReadingAttemptResource\Pages;
 use App\Models\ReadingAttempt;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -18,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -95,34 +96,9 @@ class ReadingAttemptResource extends Resource
                     ])
                     ->columns(2),
                 Section::make('Errores')
-                    ->description('Ajuste manual de errores registrados en el intento.')
-                    ->schema([
-                        Repeater::make('errors')
-                            ->relationship()
-                            ->schema([
-                                Select::make('error_type')
-                                    ->label('Tipo')
-                                    ->options(ReadingErrorType::options())
-                                    ->required()
-                                    ->native(false),
-                                TextInput::make('occurred_at_seconds')
-                                    ->label('Segundo')
-                                    ->required()
-                                    ->numeric()
-                                    ->minValue(0),
-                                TextInput::make('word_index')
-                                    ->label('Palabra')
-                                    ->numeric()
-                                    ->minValue(1),
-                                Textarea::make('comment')
-                                    ->label('Comentario')
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->defaultItems(0)
-                            ->columnSpanFull(),
-                    ]),
+                    ->description('Ajuste únicamente la cantidad por tipo de error; el detalle por palabra/segundo se conserva.')
+                    ->schema(static::getErrorCountFields())
+                    ->columns(2),
             ]);
     }
 
@@ -149,7 +125,7 @@ class ReadingAttemptResource extends Resource
                     ->label('Tiempo')
                     ->formatStateUsing(fn (int $state): string => gmdate('i:s', $state)),
                 TextColumn::make('words_per_minute')
-                    ->label('WPM')
+                    ->label('PPM')
                     ->badge()
                     ->color('primary'),
                 TextColumn::make('total_errors')
@@ -169,6 +145,31 @@ class ReadingAttemptResource extends Resource
                         ReadingAttempt::STATUS_CANCELLED => 'Cancelado',
                     ])
                     ->native(false),
+                SelectFilter::make('student_id')
+                    ->label('Estudiante')
+                    ->relationship('student', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->native(false),
+                Filter::make('created_at')
+                    ->label('Fecha')
+                    ->form([
+                        DatePicker::make('from')
+                            ->label('Desde'),
+                        DatePicker::make('until')
+                            ->label('Hasta'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'] ?? null,
+                                fn (Builder $innerQuery, $date): Builder => $innerQuery->whereDate('created_at', '>=', $date)
+                            )
+                            ->when(
+                                $data['until'] ?? null,
+                                fn (Builder $innerQuery, $date): Builder => $innerQuery->whereDate('created_at', '<=', $date)
+                            );
+                    }),
             ])
             ->recordActions([
                 ViewAction::make()->iconButton()->tooltip('Ver'),
@@ -180,6 +181,9 @@ class ReadingAttemptResource extends Resource
                     ->iconButton()
                     ->tooltip('Eliminar')
                     ->visible(fn (ReadingAttempt $record): bool => static::canDelete($record)),
+            ])
+            ->bulkActions([
+                DeleteBulkAction::make(),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -287,5 +291,27 @@ class ReadingAttemptResource extends Resource
         }
 
         return (int) $record->teacher_id === (int) $user->id;
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return Auth::user()?->can('delete_reading_attempt') ?? false;
+    }
+
+    /**
+     * @return array<int, TextInput>
+     */
+    private static function getErrorCountFields(): array
+    {
+        return collect(ReadingErrorType::cases())
+            ->map(
+                fn (ReadingErrorType $type): TextInput => TextInput::make("error_counts.{$type->value}")
+                    ->label($type->label())
+                    ->numeric()
+                    ->minValue(0)
+                    ->default(0)
+                    ->required()
+            )
+            ->all();
     }
 }
