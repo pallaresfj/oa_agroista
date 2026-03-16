@@ -35,9 +35,9 @@ class DatabaseSeeder extends Seeder
 
         $users = [
             [
-                'name' => 'Administrador de Lectura',
+                'name' => 'Usuario Soporte Lectura',
                 'email' => env('LECTURA_ADMIN_EMAIL', 'pallaresfj@iedagropivijay.edu.co'),
-                'role' => User::ROLE_SUPER_ADMIN,
+                'role' => User::ROLE_SOPORTE,
             ],
         ];
 

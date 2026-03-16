@@ -3,19 +3,18 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StudentResource\Pages;
+use App\Models\Course;
 use App\Models\Student;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 class StudentResource extends Resource
@@ -34,7 +33,29 @@ class StudentResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->isDocente();
+        return Auth::check() && Auth::user()->canManageReadingOperations();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()->with('course');
+        $user = Auth::user();
+
+        if (! $user || $user->isAdminEquivalent()) {
+            return $query;
+        }
+
+        if ($user->isDocente()) {
+            $courseIds = $user->assignedCourses()->pluck('courses.id')->all();
+
+            if ($courseIds === []) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            return $query->whereIn('course_id', $courseIds);
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     public static function form(Schema $schema): Schema
@@ -47,23 +68,13 @@ class StudentResource extends Resource
                             ->label('Nombre completo')
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('student_code')
-                            ->label('Código')
-                            ->unique(ignoreRecord: true)
-                            ->maxLength(50),
-                        TextInput::make('grade')
-                            ->label('Grado')
-                            ->maxLength(50),
-                        TextInput::make('section')
-                            ->label('Grupo')
-                            ->maxLength(50),
-                        Toggle::make('is_active')
-                            ->label('Activo')
-                            ->default(true),
-                        Textarea::make('notes')
-                            ->label('Observaciones')
-                            ->rows(4)
-                            ->columnSpanFull(),
+                        Select::make('course_id')
+                            ->label('Curso')
+                            ->required()
+                            ->options(Course::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->native(false),
                     ])
                     ->columns(2),
             ]);
@@ -77,26 +88,14 @@ class StudentResource extends Resource
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('student_code')
-                    ->label('Código')
-                    ->searchable(),
-                TextColumn::make('full_group')
-                    ->label('Grupo')
+                TextColumn::make('course.name')
+                    ->label('Curso')
                     ->placeholder('-'),
                 TextColumn::make('reading_attempts_count')
                     ->label('Intentos')
                     ->counts('readingAttempts')
                     ->badge()
                     ->color('info'),
-                IconColumn::make('is_active')
-                    ->label('Activo')
-                    ->boolean(),
-            ])
-            ->filters([
-                TernaryFilter::make('is_active')
-                    ->label('Estado')
-                    ->boolean()
-                    ->native(false),
             ])
             ->recordActions([
                 EditAction::make()->iconButton()->tooltip('Editar'),

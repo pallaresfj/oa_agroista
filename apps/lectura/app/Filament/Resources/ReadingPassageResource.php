@@ -33,7 +33,7 @@ class ReadingPassageResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->isDocente();
+        return Auth::check() && Auth::user()->canManageReadingOperations();
     }
 
     public static function form(Schema $schema): Schema

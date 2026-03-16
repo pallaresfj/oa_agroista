@@ -33,7 +33,13 @@ class GoogleAuthController extends Controller
 
     public function redirectToGoogle(): RedirectResponse
     {
-        return $this->buildGoogleDriver('select_account', $this->resolveGoogleCallbackUrl())->redirect();
+        $prompt = trim((string) config('sso.google_login_prompt', 'select_account'));
+
+        if ($prompt === '') {
+            $prompt = 'select_account';
+        }
+
+        return $this->buildGoogleDriver($prompt, $this->resolveGoogleCallbackUrl())->redirect();
     }
 
     public function handleGoogleCallback(Request $request): RedirectResponse
@@ -259,18 +265,19 @@ class GoogleAuthController extends Controller
     private function buildGoogleDriver(string $prompt, string $redirectUrl): GoogleProvider
     {
         $domains = config('sso.institution_email_domains', []);
+        $parameters = ['prompt' => $prompt];
 
         /** @var GoogleProvider $driver */
         $driver = Socialite::driver('google');
 
+        if (! empty($domains)) {
+            $parameters['hd'] = $domains[0];
+        }
+
         $driver
             ->redirectUrl($redirectUrl)
             ->scopes(['openid', 'profile', 'email'])
-            ->with(['prompt' => $prompt]);
-
-        if (! empty($domains)) {
-            $driver->with(['hd' => $domains[0]]);
-        }
+            ->with($parameters);
 
         return $driver;
     }

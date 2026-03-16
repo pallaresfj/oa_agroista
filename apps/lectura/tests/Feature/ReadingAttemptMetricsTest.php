@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\ReadingAttempt;
+use App\Models\Course;
 use App\Models\ReadingPassage;
 use App\Models\Student;
 use App\Models\User;
@@ -10,10 +11,11 @@ uses(RefreshDatabase::class);
 
 it('calculates reading metrics when an attempt is completed', function (): void {
     $teacher = User::factory()->create();
+    $course = Course::query()->create(['name' => '5A']);
+
     $student = Student::query()->create([
         'name' => 'Estudiante Uno',
-        'student_code' => 'STU-001',
-        'is_active' => true,
+        'course_id' => $course->id,
     ]);
 
     $passage = ReadingPassage::query()->create([

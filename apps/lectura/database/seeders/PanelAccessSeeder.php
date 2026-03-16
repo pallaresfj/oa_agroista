@@ -20,7 +20,7 @@ class PanelAccessSeeder extends Seeder
 
         Role::query()
             ->where('guard_name', 'web')
-            ->whereIn('name', ['super_admin', 'docente'])
+            ->whereIn('name', ['super_admin', 'soporte', 'directivo', 'docente'])
             ->get()
             ->each(function (Role $role) use ($permission): void {
                 if (! $role->hasPermissionTo($permission)) {

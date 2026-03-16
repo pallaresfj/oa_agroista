@@ -53,7 +53,7 @@ class RecentAttemptsWidget extends BaseWidget
             ->where('status', ReadingAttempt::STATUS_COMPLETED)
             ->latest('finished_at');
 
-        if (! Auth::user()->isSuperAdmin()) {
+        if (Auth::user()->isDocente()) {
             $query->where('teacher_id', Auth::id());
         }
 

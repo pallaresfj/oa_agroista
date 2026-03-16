@@ -16,7 +16,7 @@ class ReadingStatsWidget extends BaseWidget
     {
         $attemptsQuery = ReadingAttempt::query()->where('status', ReadingAttempt::STATUS_COMPLETED);
 
-        if (! Auth::user()->isSuperAdmin()) {
+        if (Auth::user()->isDocente()) {
             $attemptsQuery->where('teacher_id', Auth::id());
         }
 
@@ -24,8 +24,8 @@ class ReadingStatsWidget extends BaseWidget
         $averageWpm = round((float) ((clone $attemptsQuery)->avg('words_per_minute') ?? 0), 1);
 
         return [
-            Stat::make('Estudiantes activos', Student::query()->where('is_active', true)->count())
-                ->description('Disponibles para evaluar')
+            Stat::make('Estudiantes', Student::query()->count())
+                ->description('Registrados en el sistema')
                 ->descriptionIcon('heroicon-m-users', IconPosition::Before)
                 ->color('primary'),
             Stat::make('Lecturas activas', ReadingPassage::query()->where('is_active', true)->count())

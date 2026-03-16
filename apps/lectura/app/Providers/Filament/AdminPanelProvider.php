@@ -6,6 +6,7 @@ use App\Filament\Pages\Auth\EditProfile;
 use App\Filament\Pages\Auth\Login as FilamentLogin;
 use App\Filament\Pages\DocenteDashboard;
 use App\Filament\Pages\ReadingSession;
+use App\Filament\Resources\CourseResource;
 use App\Filament\Resources\ReadingAttemptResource;
 use App\Filament\Resources\ReadingPassageResource;
 use App\Filament\Resources\StudentResource;
@@ -51,6 +52,7 @@ class AdminPanelProvider extends PanelProvider
                 StudentResource::class,
                 ReadingPassageResource::class,
                 ReadingAttemptResource::class,
+                CourseResource::class,
                 UserResource::class,
             ])
             ->pages([

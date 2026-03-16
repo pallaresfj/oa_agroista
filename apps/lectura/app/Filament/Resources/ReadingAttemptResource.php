@@ -2,12 +2,20 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ReadingErrorType;
 use App\Filament\Resources\ReadingAttemptResource\Pages;
 use App\Models\ReadingAttempt;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -32,18 +40,83 @@ class ReadingAttemptResource extends Resource
 
     public static function canAccess(): bool
     {
-        return Auth::check() && Auth::user()->isDocente();
+        return Auth::check() && (Auth::user()->canManageReadingOperations() || Auth::user()->isDirectivo());
     }
 
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()->with(['student', 'teacher', 'passage', 'errors']);
+        $user = Auth::user();
 
-        if (! Auth::user()?->isSuperAdmin()) {
-            $query->where('teacher_id', Auth::id());
+        if (! $user) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        if ($user->isDocente()) {
+            $query->where('teacher_id', $user->id);
         }
 
         return $query;
+    }
+
+    public static function form(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Resumen del intento')
+                    ->schema([
+                        TextInput::make('status')
+                            ->label('Estado')
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('duration_seconds')
+                            ->label('Tiempo (segundos)')
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('word_count')
+                            ->label('Palabras')
+                            ->disabled()
+                            ->dehydrated(false),
+                        TextInput::make('words_per_minute')
+                            ->label('WPM')
+                            ->disabled()
+                            ->dehydrated(false),
+                        Textarea::make('notes')
+                            ->label('Observaciones')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
+                Section::make('Errores')
+                    ->description('Ajuste manual de errores registrados en el intento.')
+                    ->schema([
+                        Repeater::make('errors')
+                            ->relationship()
+                            ->schema([
+                                Select::make('error_type')
+                                    ->label('Tipo')
+                                    ->options(ReadingErrorType::options())
+                                    ->required()
+                                    ->native(false),
+                                TextInput::make('occurred_at_seconds')
+                                    ->label('Segundo')
+                                    ->required()
+                                    ->numeric()
+                                    ->minValue(0),
+                                TextInput::make('word_index')
+                                    ->label('Palabra')
+                                    ->numeric()
+                                    ->minValue(1),
+                                Textarea::make('comment')
+                                    ->label('Comentario')
+                                    ->rows(2)
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(2)
+                            ->defaultItems(0)
+                            ->columnSpanFull(),
+                    ]),
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -92,6 +165,14 @@ class ReadingAttemptResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make()->iconButton()->tooltip('Ver'),
+                EditAction::make()
+                    ->iconButton()
+                    ->tooltip('Editar')
+                    ->visible(fn (ReadingAttempt $record): bool => static::canEdit($record)),
+                DeleteAction::make()
+                    ->iconButton()
+                    ->tooltip('Eliminar')
+                    ->visible(fn (ReadingAttempt $record): bool => static::canDelete($record)),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -134,6 +215,7 @@ class ReadingAttemptResource extends Resource
         return [
             'index' => Pages\ListReadingAttempts::route('/'),
             'view' => Pages\ViewReadingAttempt::route('/{record}'),
+            'edit' => Pages\EditReadingAttempt::route('/{record}/edit'),
         ];
     }
 
@@ -144,11 +226,25 @@ class ReadingAttemptResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
+        $user = Auth::user();
+
+        if (! $user) {
+            return false;
+        }
+
+        if ($user->isAdminEquivalent()) {
+            return true;
+        }
+
+        if ($user->isDocente()) {
+            return (int) $record->teacher_id === (int) $user->id;
+        }
+
         return false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return false;
+        return static::canEdit($record);
     }
 }

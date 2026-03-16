@@ -8,6 +8,7 @@ use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -20,9 +21,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public const ROLE_SUPER_ADMIN = 'super_admin';
 
-    public const ROLE_DOCENTE = 'docente';
+    public const ROLE_SOPORTE = 'soporte';
 
-    public const ROLE_ESTUDIANTE = 'estudiante';
+    public const ROLE_DIRECTIVO = 'directivo';
+
+    public const ROLE_DOCENTE = 'docente';
 
     protected string $guard_name = 'web';
 
@@ -59,13 +62,19 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasMany(ReadingAttempt::class, 'teacher_id');
     }
 
+    public function assignedCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class)
+            ->withTimestamps();
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         if (! $this->is_active) {
             return false;
         }
 
-        if ($this->isDocente()) {
+        if ($this->isAdminEquivalent() || $this->isDocente() || $this->isDirectivo()) {
             return true;
         }
 
@@ -81,14 +90,29 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         return $this->hasRole(self::ROLE_SUPER_ADMIN);
     }
 
-    public function isDocente(): bool
+    public function isSoporte(): bool
     {
-        return $this->hasAnyRole([self::ROLE_SUPER_ADMIN, self::ROLE_DOCENTE]);
+        return $this->hasRole(self::ROLE_SOPORTE);
     }
 
-    public function isEstudiante(): bool
+    public function isAdminEquivalent(): bool
     {
-        return $this->hasRole(self::ROLE_ESTUDIANTE);
+        return $this->isSuperAdmin() || $this->isSoporte();
+    }
+
+    public function isDirectivo(): bool
+    {
+        return $this->hasRole(self::ROLE_DIRECTIVO);
+    }
+
+    public function isDocente(): bool
+    {
+        return $this->hasRole(self::ROLE_DOCENTE);
+    }
+
+    public function canManageReadingOperations(): bool
+    {
+        return $this->isAdminEquivalent() || $this->isDocente();
     }
 
     public function scopeActive(Builder $query): Builder
@@ -112,12 +136,16 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
             return UserRole::SUPER_ADMIN->label();
         }
 
-        if ($this->isDocente()) {
-            return UserRole::DOCENTE->label();
+        if ($this->isSoporte()) {
+            return UserRole::SOPORTE->label();
         }
 
-        if ($this->isEstudiante()) {
-            return UserRole::ESTUDIANTE->label();
+        if ($this->isDirectivo()) {
+            return UserRole::DIRECTIVO->label();
+        }
+
+        if ($this->isDocente()) {
+            return UserRole::DOCENTE->label();
         }
 
         return 'Sin rol asignado';
@@ -125,7 +153,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function dashboardRouteName(): string
     {
-        if ($this->isDocente() || $this->isSuperAdmin()) {
+        if ($this->isAdminEquivalent() || $this->isDocente() || $this->isDirectivo()) {
             return 'dashboard';
         }
 
@@ -139,7 +167,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         }
 
         $normalizedRole = mb_strtolower(trim($preferredRole));
-        $roleName = in_array($normalizedRole, [self::ROLE_SUPER_ADMIN, self::ROLE_DOCENTE, self::ROLE_ESTUDIANTE], true)
+        $roleName = in_array($normalizedRole, [self::ROLE_SUPER_ADMIN, self::ROLE_SOPORTE, self::ROLE_DIRECTIVO, self::ROLE_DOCENTE], true)
             ? $normalizedRole
             : self::ROLE_DOCENTE;
 

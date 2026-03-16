@@ -1,102 +1,142 @@
 @php
     /** @var \App\Filament\Pages\ReadingSession $this */
     $attempt = $this->getActiveAttemptRecord();
-    $errorCounters = $this->getErrorCounters();
+    $studentOptions = $this->getStudentOptions();
+    $passageOptions = $this->getPassageOptions();
+    $selectedPassage = $attempt?->passage ?? $this->getSelectedPassage();
+    $errorTypeLabels = $this->getErrorTypeLabels();
 @endphp
 
 <x-filament::page>
+    <script>
+        window.oaReadingTimer = function (startedAt, fallbackCentiseconds) {
+            return {
+                startedAt,
+                fallbackCentiseconds,
+                now: Date.now(),
+                ticker: null,
+                init() {
+                    if (this.startedAt) {
+                        this.ticker = setInterval(() => {
+                            this.now = Date.now();
+                        }, 10);
+                    }
+                },
+                centiseconds() {
+                    if (! this.startedAt) {
+                        return this.fallbackCentiseconds;
+                    }
+
+                    return Math.max(0, Math.floor((this.now - this.startedAt) / 10));
+                },
+                formatted() {
+                    const centiseconds = this.centiseconds();
+                    const minutes = String(Math.floor(centiseconds / 6000)).padStart(2, '0');
+                    const seconds = String(Math.floor((centiseconds % 6000) / 100)).padStart(2, '0');
+                    const hundredths = String(centiseconds % 100).padStart(2, '0');
+
+                    return `${minutes}:${seconds}.${hundredths}`;
+                },
+                main() {
+                    return this.formatted().slice(0, 5);
+                },
+                decimals() {
+                    return this.formatted().slice(5);
+                },
+            };
+        };
+    </script>
+
     <div class="space-y-6">
-        <form wire:submit="startAttempt" class="space-y-4">
-            {{ $this->form }}
+        <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="grid gap-4 md:grid-cols-2">
+                <label class="space-y-1">
+                    <span class="block text-sm font-semibold text-slate-700">Estudiante</span>
+                    <select
+                        wire:model.live="studentId"
+                        @disabled($attempt !== null)
+                        class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100">
+                        <option value="">Seleccionar estudiante...</option>
+                        @foreach ($studentOptions as $optionId => $label)
+                            <option value="{{ $optionId }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
 
-            @if (! $attempt)
-                <x-filament::button type="submit" icon="heroicon-m-play">
-                    Iniciar lectura
-                </x-filament::button>
-            @endif
-        </form>
-
-        @if ($attempt)
-            <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-                <section class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-                    <div class="mb-5 flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-400">Lectura en curso</p>
-                            <h2 class="mt-2 text-2xl font-bold text-slate-900">{{ $attempt->student?->name }}</h2>
-                            <p class="mt-1 text-sm text-slate-500">{{ $attempt->passage?->title }} · {{ $attempt->word_count }} palabras</p>
-                        </div>
-
-                        <div
-                            x-data="{ startedAt: new Date('{{ $attempt->started_at?->toIso8601String() }}').getTime(), now: Date.now(), tick() { this.now = Date.now() } }"
-                            x-init="setInterval(() => tick(), 1000)"
-                            class="rounded-2xl bg-slate-950 px-5 py-4 text-center text-white">
-                            <p class="text-xs uppercase tracking-[0.28em] text-white/60">Tiempo</p>
-                            <p class="mt-2 text-3xl font-semibold tabular-nums" x-text="new Date(now - startedAt).toISOString().slice(14, 19)"></p>
-                        </div>
-                    </div>
-
-                    <div class="rounded-3xl bg-slate-50 p-6 text-lg leading-9 text-slate-800">
-                        {!! nl2br(e($attempt->passage?->content ?? '')) !!}
-                    </div>
-                </section>
-
-                <aside class="space-y-6">
-                    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 class="text-lg font-semibold text-slate-900">Marcadores de error</h3>
-                        <p class="mt-1 text-sm text-slate-500">Opcionalmente agrega posición de palabra o comentario antes de marcar el error.</p>
-
-                        <div class="mt-4 grid gap-4">
-                            <x-filament::input.wrapper>
-                                <x-filament::input type="number" min="1" wire:model.live="errorWordIndex" placeholder="Número de palabra" />
-                            </x-filament::input.wrapper>
-
-                            <x-filament::input.wrapper>
-                                <x-filament::input type="text" wire:model.live="errorComment" placeholder="Comentario opcional" />
-                            </x-filament::input.wrapper>
-                        </div>
-
-                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
-                            @foreach (\App\Enums\ReadingErrorType::cases() as $type)
-                                <button
-                                    type="button"
-                                    wire:click="registerError('{{ $type->value }}')"
-                                    class="rounded-2xl border border-slate-200 px-4 py-4 text-left transition hover:border-slate-300 hover:bg-slate-50">
-                                    <span class="block text-sm font-semibold text-slate-900">{{ $type->label() }}</span>
-                                    <span class="mt-1 block text-xs text-slate-500">Registrados: {{ $errorCounters[$type->value] ?? 0 }}</span>
-                                </button>
-                            @endforeach
-                        </div>
-                    </section>
-
-                    <section class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <h3 class="text-lg font-semibold text-slate-900">Cierre del intento</h3>
-                        <div class="mt-4">
-                            <x-filament::input.wrapper>
-                                <textarea
-                                    wire:model.live="attemptNotes"
-                                    rows="4"
-                                    class="block min-h-24 w-full rounded-xl border-0 bg-transparent text-sm text-slate-900 focus:ring-0"
-                                    placeholder="Observaciones finales del docente"></textarea>
-                            </x-filament::input.wrapper>
-                        </div>
-
-                        <div class="mt-5 flex flex-wrap gap-3">
-                            <x-filament::button color="success" wire:click="finishAttempt" icon="heroicon-m-stop">
-                                Finalizar
-                            </x-filament::button>
-                            <x-filament::button color="danger" wire:click="cancelAttempt" icon="heroicon-m-x-circle">
-                                Cancelar
-                            </x-filament::button>
-                        </div>
-                    </section>
-                </aside>
+                <label class="space-y-1">
+                    <span class="block text-sm font-semibold text-slate-700">Lectura</span>
+                    <select
+                        wire:model.live="passageId"
+                        @disabled($attempt !== null)
+                        class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 disabled:cursor-not-allowed disabled:bg-slate-100">
+                        <option value="">Seleccionar lectura...</option>
+                        @foreach ($passageOptions as $optionId => $label)
+                            <option value="{{ $optionId }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </label>
             </div>
-        @endif
+
+            @if ($studentOptions === [])
+                <div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    No hay estudiantes disponibles para su perfil. Si su rol es docente, primero asigne uno o más cursos al usuario.
+                </div>
+            @endif
+        </section>
+
+        <section
+            x-data="oaReadingTimer({{ $attempt?->started_at?->valueOf() ?? 'null' }}, {{ (int) $finalCentiseconds }})"
+            x-init="init()"
+            class="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+            <div class="font-mono text-7xl font-bold leading-none tracking-tight text-slate-900 md:text-8xl">
+                <span x-text="main()">00:00</span><span class="text-4xl text-primary-600 md:text-5xl" x-text="decimals()">.00</span>
+            </div>
+
+            <div class="mt-7">
+                @if ($attempt)
+                    <x-filament::button
+                        wire:click="stopAttempt"
+                        color="danger"
+                        icon="heroicon-m-stop-circle"
+                        size="xl"
+                        class="min-w-72">
+                        Detener
+                    </x-filament::button>
+                @else
+                    <x-filament::button
+                        wire:click="startAttempt"
+                        color="success"
+                        icon="heroicon-m-play-circle"
+                        size="xl"
+                        class="min-w-72"
+                        :disabled="$studentOptions === [] || $passageOptions === []">
+                        Iniciar
+                    </x-filament::button>
+                @endif
+            </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-10">
+            <h2 class="mb-5 flex items-center gap-2 text-2xl font-semibold text-primary-600">
+                <x-heroicon-m-book-open class="h-6 w-6" />
+                Texto de lectura
+            </h2>
+
+            @if ($selectedPassage)
+                <div class="space-y-4 text-xl leading-relaxed text-slate-800">
+                    {!! nl2br(e($selectedPassage->content)) !!}
+                </div>
+            @else
+                <p class="text-base text-slate-500">
+                    Seleccione una lectura para mostrar el texto.
+                </p>
+            @endif
+        </section>
 
         @if ($this->lastResult)
-            <section class="rounded-3xl border border-emerald-200 bg-emerald-50/70 p-6">
+            <section class="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6">
                 <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-700">Resultado guardado</p>
-                <div class="mt-4 grid gap-4 sm:grid-cols-4">
+                <div class="mt-4 grid gap-4 md:grid-cols-4">
                     <div class="rounded-2xl bg-white p-4">
                         <span class="text-xs uppercase tracking-[0.2em] text-slate-400">Tiempo</span>
                         <p class="mt-2 text-2xl font-semibold text-slate-900">{{ gmdate('i:s', $this->lastResult['duration']) }}</p>
@@ -107,20 +147,93 @@
                     </div>
                     <div class="rounded-2xl bg-white p-4">
                         <span class="text-xs uppercase tracking-[0.2em] text-slate-400">WPM</span>
-                        <p class="mt-2 text-2xl font-semibold text-slate-900">{{ number_format($this->lastResult['wpm'], 2) }}</p>
+                        <p class="mt-2 text-2xl font-semibold text-slate-900">{{ number_format($this->lastResult['wpm'], 0) }}</p>
                     </div>
                     <div class="rounded-2xl bg-white p-4">
                         <span class="text-xs uppercase tracking-[0.2em] text-slate-400">Errores</span>
                         <p class="mt-2 text-2xl font-semibold text-slate-900">{{ $this->lastResult['errors'] }}</p>
                     </div>
                 </div>
-
-                <div class="mt-4">
-                    <a href="{{ $this->lastResult['attempt_url'] }}" class="text-sm font-semibold text-emerald-700 hover:text-emerald-800">
-                        Ver detalle del intento
-                    </a>
-                </div>
             </section>
         @endif
     </div>
+
+    @if ($showFinalizeModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+            <div class="w-full max-w-4xl overflow-hidden rounded-[2rem] bg-white shadow-2xl">
+                <div class="flex items-center justify-between border-b border-slate-200 px-8 py-6">
+                    <h3 class="text-5xl font-bold text-slate-900">Finalizar Evaluación</h3>
+                    <button
+                        type="button"
+                        wire:click="closeFinalizeModal"
+                        class="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        aria-label="Cerrar">
+                        <x-heroicon-m-x-mark class="h-9 w-9" />
+                    </button>
+                </div>
+
+                <div class="space-y-8 px-8 py-8">
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="rounded-3xl bg-slate-100 p-6 text-center">
+                            <p class="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">Tiempo final</p>
+                            <p class="mt-2 font-mono text-6xl font-bold text-primary-600">{{ $this->formatCentiseconds($finalCentiseconds) }}</p>
+                        </div>
+                        <div class="rounded-3xl bg-slate-100 p-6 text-center">
+                            <p class="text-sm font-bold uppercase tracking-[0.18em] text-slate-500">PPM (Aprox)</p>
+                            <p class="mt-2 text-6xl font-bold text-slate-800">{{ number_format($this->getApproxWpm(), 0) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h4 class="text-center text-4xl font-semibold text-slate-900">Cantidad de Errores</h4>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            @foreach ($errorTypeLabels as $type => $label)
+                                <div class="rounded-2xl bg-slate-50 p-4">
+                                    <p class="text-lg font-semibold text-slate-700">{{ $label }}</p>
+                                    <div class="mt-3 flex items-center justify-between">
+                                        <button
+                                            type="button"
+                                            wire:click="adjustErrorCount('{{ $type }}', -1)"
+                                            class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-3xl font-semibold text-primary-600 transition hover:bg-slate-300">
+                                            -
+                                        </button>
+                                        <span class="text-5xl font-bold text-slate-900">{{ (int) ($pendingErrorCounts[$type] ?? 0) }}</span>
+                                        <button
+                                            type="button"
+                                            wire:click="adjustErrorCount('{{ $type }}', 1)"
+                                            class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-200 text-3xl font-semibold text-primary-600 transition hover:bg-slate-300">
+                                            +
+                                        </button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <p class="text-center text-xl font-semibold text-slate-900">
+                            Total errores: {{ $this->getTotalErrors() }}
+                        </p>
+                    </div>
+
+                    <div class="space-y-3 pt-2">
+                        <x-filament::button
+                            color="warning"
+                            icon="heroicon-m-bookmark-square"
+                            wire:click="saveEvaluation"
+                            size="xl"
+                            class="w-full justify-center">
+                            Guardar Evaluación
+                        </x-filament::button>
+
+                        <x-filament::button
+                            color="gray"
+                            wire:click="discardAndReset"
+                            size="xl"
+                            class="w-full justify-center">
+                            Descartar y Reiniciar
+                        </x-filament::button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </x-filament::page>

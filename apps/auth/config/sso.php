@@ -64,6 +64,8 @@ return [
 
     'google_logout_from_browser' => (bool) env('GOOGLE_LOGOUT_FROM_BROWSER', true),
 
+    'google_login_prompt' => trim((string) env('GOOGLE_LOGIN_PROMPT', 'select_account')),
+
     'google_session_check_enabled' => (bool) env('GOOGLE_SESSION_CHECK_ENABLED', true),
 
     'google_session_check_interval_seconds' => (int) env('GOOGLE_SESSION_CHECK_INTERVAL_SECONDS', 60),
