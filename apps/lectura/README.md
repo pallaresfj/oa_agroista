@@ -59,3 +59,7 @@ LECTURA_ADMIN_EMAIL=admin@institucion.edu.co
 - `/app/students`: estudiantes
 - `/app/reading-passages`: lecturas
 - `/app/reading-attempts`: historial de intentos
+
+## Deploy en Dokploy
+
+- Guía paso a paso: `docs/DOKPLOY_DEPLOY.md`
