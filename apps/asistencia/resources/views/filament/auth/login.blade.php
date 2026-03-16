@@ -327,7 +327,7 @@
 
             <footer class="silo-access-legal">
                 <p>
-                    (c) {{ date('Y') }} {{ config('app.name', 'Teaching Assistance') }} - {{ data_get($institutionBranding ?? [], 'name', 'Institucion') }}. Desarrollado por
+                    © {{ date('Y') }} {{ config('app.name', 'Teaching Assistance') }} - {{ data_get($institutionBranding ?? [], 'name', 'Institucion') }}. Desarrollado por
                     <a href="https://www.asyservicios.com" target="_blank" rel="noreferrer noopener">AS&amp;Servicios.com</a>
                 </p>
             </footer>

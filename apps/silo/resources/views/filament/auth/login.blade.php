@@ -66,7 +66,7 @@
                 <div class="silo-access-card-body">
                     <header class="silo-access-card-header">
                         <h2 id="silo-access-title">Acceso Institucional</h2>
-                        <p>Utilice sus credenciales educativas para ingresar al ecosistema de aprendizaje.</p>
+                        <p>Utilice sus credenciales educativas para ingresar al sistema de gestión documental.</p>
                     </header>
 
                     @if ($errors->has('sso') || $errors->has('auth'))
