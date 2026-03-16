@@ -32,10 +32,12 @@ En Dokploy:
 3. Ejecuta:
 
 ```bash
-mysql -u root
+mysql -u root -p
 ```
 
-4. Pega y ejecuta este SQL:
+4. Ingresa la contraseña de `root` cuando el sistema la solicite.
+
+5. Pega y ejecuta este SQL:
 
 ```sql
 CREATE DATABASE IF NOT EXISTS db_lectura
