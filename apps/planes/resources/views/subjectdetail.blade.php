@@ -184,8 +184,9 @@
     </section>
 
     <footer class="bg-gray-900 text-gray-300 py-6">
-      <div class="max-w-7xl mx-auto text-center text-sm">
-        <p>Copyright 2025. {{ data_get($institutionBranding ?? [], 'name', config('app.name', 'Institucion')) }} - Pivijay | Diseño <a rel="nofollow" href="https://asyservicios.com" target="_blank" class="text-green-500 hover:underline">AS&Servicios.com</a></p>
+      <div class="max-w-7xl mx-auto px-4 text-sm flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <p>&copy; {{ date('Y') }} {{ data_get($institutionBranding ?? [], 'name', config('app.name', 'Institucion')) }}. {{ data_get($institutionBranding ?? [], 'location', 'Pivijay, Magdalena - Colombia') }}</p>
+        <p>Desarrollado por <a rel="nofollow noopener noreferrer" href="https://asyservicios.com" target="_blank" class="text-green-500 hover:underline">AS&amp;Servicios.com</a></p>
       </div>
     </footer>
 

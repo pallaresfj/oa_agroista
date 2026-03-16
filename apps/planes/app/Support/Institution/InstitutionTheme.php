@@ -19,7 +19,7 @@ class InstitutionTheme
     private static ?array $paletteCache = null;
 
     /**
-     * @var array{name: string, logo_url: ?string, nit: string, palette: array<string, string>, primary_color: string, secondary_color: string}|null
+     * @var array{name: string, logo_url: ?string, nit: string, location: string, palette: array<string, string>, primary_color: string, secondary_color: string}|null
      */
     private static ?array $brandingCache = null;
 
@@ -79,7 +79,7 @@ class InstitutionTheme
     }
 
     /**
-     * @return array{name: string, logo_url: ?string, nit: string, palette: array<string, string>, primary_color: string, secondary_color: string}
+     * @return array{name: string, logo_url: ?string, nit: string, location: string, palette: array<string, string>, primary_color: string, secondary_color: string}
      */
     public static function branding(): array
     {
@@ -92,11 +92,13 @@ class InstitutionTheme
         $name = trim((string) ($institution['name'] ?? ''));
         $logoUrl = trim((string) ($institution['logo_url'] ?? ''));
         $nit = trim((string) ($institution['settings']['nit'] ?? ''));
+        $location = trim((string) ($institution['settings']['location'] ?? 'Pivijay, Magdalena - Colombia'));
 
         self::$brandingCache = [
             'name' => $name !== '' ? $name : (string) config('app.name', 'Institucion'),
             'logo_url' => $logoUrl !== '' ? $logoUrl : null,
             'nit' => $nit,
+            'location' => $location !== '' ? $location : 'Pivijay, Magdalena - Colombia',
             'palette' => $palette,
             'primary_color' => $palette['primary'],
             'secondary_color' => $palette['success'],

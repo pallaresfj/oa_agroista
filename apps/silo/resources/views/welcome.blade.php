@@ -4,6 +4,7 @@
     $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
     $palette = data_get($institutionBranding ?? [], 'palette', []);
     $institutionName = (string) data_get($institutionBranding ?? [], 'name', 'Institucion');
+    $institutionLocation = (string) data_get($institutionBranding ?? [], 'location', 'Pivijay, Magdalena - Colombia');
 @endphp
 
 <head>
@@ -340,60 +341,12 @@
         .footer {
             background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-gray-900) 100%);
             color: var(--color-white);
-            padding: 3rem 2rem 2rem;
-        }
-
-        .footer-container {
-            max-width: 1280px;
-            margin: 0 auto;
+            padding: 1.25rem 2rem;
         }
 
         .footer-content {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 2rem;
-            padding-bottom: 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .footer-about h5 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
-        }
-
-        .footer-about p {
-            opacity: 0.8;
-            line-height: 1.7;
-        }
-
-        .footer-links h6 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .footer-links ul {
-            list-style: none;
-        }
-
-        .footer-links li {
-            margin-bottom: 0.5rem;
-        }
-
-        .footer-links a {
-            color: var(--color-white);
-            text-decoration: none;
-            opacity: 0.8;
-            transition: opacity 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            opacity: 1;
-        }
-
-        .footer-bottom {
+            max-width: 1280px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -403,13 +356,13 @@
             opacity: 0.8;
         }
 
-        .footer-bottom a {
+        .footer-content a {
             color: var(--color-info);
             text-decoration: none;
             font-weight: 600;
         }
 
-        .footer-bottom a:hover {
+        .footer-content a:hover {
             text-decoration: underline;
         }
 
@@ -425,10 +378,6 @@
                 font-size: 2.5rem;
             }
 
-            .footer-content {
-                grid-template-columns: 1fr;
-                gap: 2rem;
-            }
         }
 
         @media (max-width: 768px) {
@@ -469,9 +418,13 @@
                 grid-template-columns: 1fr;
             }
 
-            .footer-bottom {
+            .footer {
+                padding: 1rem;
+            }
+
+            .footer-content {
                 flex-direction: column;
-                text-align: center;
+                align-items: flex-start;
             }
         }
     </style>
@@ -575,44 +528,9 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-about">
-                    <h5>SILO - Sistema de Gestión Documental</h5>
-                    <p>
-                        Plataforma desarrollada para optimizar la gestión documental institucional
-                        de {{ $institutionName }}, facilitando el acceso,
-                        organización y control de documentos importantes.
-                    </p>
-                </div>
-
-                <div class="footer-links">
-                    <h6>Enlaces Rápidos</h6>
-                    <ul>
-                        <li><a href="{{ url('/admin/login') }}">Acceder</a></li>
-                        <li><a href="{{ url('/admin') }}">Panel de Control</a></li>
-                    </ul>
-                </div>
-
-                <div class="footer-links">
-                    <h6>Información</h6>
-                    <ul>
-                        <li><a href="https://www.asyservicios.com" target="_blank">Desarrolladora</a></li>
-                        <li><a href="#">Soporte Técnico</a></li>
-                        <li><a href="#">Documentación</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="footer-bottom">
-                <div>
-                    © {{ date('Y') }} SILO. Todos los derechos reservados.
-                    Desarrollado por <a href="https://www.asyservicios.com" target="_blank">AS&Servicios.com</a>
-                </div>
-                <div>
-                    Propiedad de <strong>{{ $institutionName }}</strong>
-                </div>
-            </div>
+        <div class="footer-content">
+            <p>© {{ date('Y') }} {{ $institutionName }}. {{ $institutionLocation }}</p>
+            <p>Desarrollado por <a href="https://asyservicios.com" target="_blank" rel="noopener noreferrer">AS&amp;Servicios.com</a></p>
         </div>
     </footer>
 </body>

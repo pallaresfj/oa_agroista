@@ -4,6 +4,7 @@
     $institutionBranding = $institutionBranding ?? \App\Support\Institution\InstitutionTheme::branding();
     $palette = data_get($institutionBranding ?? [], 'palette', []);
     $institutionName = (string) data_get($institutionBranding ?? [], 'name', 'Institucion');
+    $institutionLocation = (string) data_get($institutionBranding ?? [], 'location', 'Pivijay, Magdalena - Colombia');
 @endphp
 
 <head>
@@ -384,11 +385,25 @@
 
         /* Footer */
         .footer {
-            padding: 2rem;
-            text-align: center;
+            padding: 1.25rem 2rem;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
             color: var(--gray-500);
             font-size: 0.875rem;
-            border-top: 1px solid var(--gray-200);
+        }
+
+        .footer-content a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -507,6 +522,15 @@
             .features {
                 padding: 3rem 1rem 4rem;
             }
+
+            .footer {
+                padding: 1rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -577,8 +601,10 @@
 
     <!-- Footer -->
     <footer class="footer">
-        <p>© {{ date('Y') }} {{ config('app.name', 'Teaching Assistance') }}. Desarrollado por <a href="https://asyservicios.com" target="_blank"
-                style="color: var(--primary); text-decoration: none; font-weight: 500;">AS&Servicios.com</a></p>
+        <div class="footer-content">
+            <p>© {{ date('Y') }} {{ $institutionName }}. {{ $institutionLocation }}</p>
+            <p>Desarrollado por <a href="https://asyservicios.com" target="_blank" rel="noopener noreferrer">AS&amp;Servicios.com</a></p>
+        </div>
     </footer>
 </body>
 
