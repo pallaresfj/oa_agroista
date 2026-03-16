@@ -546,11 +546,11 @@
             <nav class="nav-links">
                 @auth
                     <a href="{{ url('/dashboard') }}" class="nav-link nav-link-primary">
-                        Mi Panel →
+                        Ingresar
                     </a>
                 @else
                     <a href="/app/login" class="nav-link nav-link-ghost">
-                        Iniciar Sesión
+                        Ingresar
                     </a>
                 @endauth
             </nav>

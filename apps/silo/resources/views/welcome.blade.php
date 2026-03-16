@@ -444,9 +444,9 @@
 
             <div class="nav-buttons">
                 @auth
-                    <a href="{{ url('/admin') }}" class="btn btn-primary">Dashboard</a>
+                    <a href="{{ url('/admin') }}" class="btn btn-primary">Ingresar</a>
                 @else
-                    <a href="{{ url('/admin/login') }}" class="btn btn-outline">Acceder</a>
+                    <a href="{{ url('/admin/login') }}" class="btn btn-outline">Ingresar</a>
                 @endauth
             </div>
         </nav>
