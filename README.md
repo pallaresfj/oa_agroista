@@ -60,6 +60,7 @@ Cada secret debe ser la URL del webhook de deploy del servicio en Dokploy.
 ### Runbook oficial Dokploy (monorepo)
 
 - Guia central: `infra/DOKPLOY_MONOREPO_RUNBOOK.md`
+- Corte con BD ya migrada (sin migraciones): `infra/DOKPLOY_MIGRATED_DB_CUTOVER_RUNBOOK.md`
 - Compose por app:
   - `apps/auth/docker-compose.dokploy.yml`
   - `apps/planes/docker-compose.dokploy.yml`

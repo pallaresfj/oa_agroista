@@ -8,6 +8,15 @@ Institution-level deployment templates for Dokploy.
 - Topology: 4 apps separated (`auth`, `planes`, `asistencia`, `silo`) + shared `mysql` and `redis`.
 - Build strategy: each app builds from this monorepo using `apps/*/docker-compose.dokploy.yml`.
 
+## Migrated DB cutover runbook (no migrations)
+
+- `DOKPLOY_MIGRATED_DB_CUTOVER_RUNBOOK.md`
+- Scope: 5 apps (`auth`, `planes`, `asistencia`, `lectura`, `silo`) on a new VPS with Dokploy.
+- Rule: do not run `migrate`/`db:seed` on first startup when DB schemas are already migrated.
+- Validation helpers:
+  - `scripts/check_dokploy_env.sh` (validate app env files before deploy)
+  - `scripts/check_dokploy_health.sh` (check `/up` + auth OIDC discovery after deploy)
+
 ## Prebuilt-images template (legacy/optional)
 
 - `docker-compose.institucion-template.yml`
